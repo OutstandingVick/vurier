@@ -1,0 +1,3 @@
+export function JobFeedSkeleton() {
+  return <div className="space-y-4" aria-label="Loading opportunities" role="status">{Array.from({ length: 3 }, (_, index) => <div className="rounded-2xl bg-surface p-6 shadow-card" key={index}><div className="h-4 w-32 animate-pulse rounded bg-surface-muted motion-reduce:animate-none" /><div className="mt-4 h-6 w-3/4 animate-pulse rounded bg-surface-muted motion-reduce:animate-none" /><div className="mt-4 space-y-2"><div className="h-3 w-full animate-pulse rounded bg-surface-muted motion-reduce:animate-none" /><div className="h-3 w-5/6 animate-pulse rounded bg-surface-muted motion-reduce:animate-none" /></div></div>)}</div>;
+}
