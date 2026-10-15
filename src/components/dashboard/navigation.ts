@@ -2,8 +2,8 @@ import { BarChart3, BriefcaseBusiness, Compass, FileText, FolderKanban, LayoutDa
 
 export const dashboardNavigation = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Discover jobs", href: "/dashboard/discover", icon: Compass, comingSoon: true },
-  { label: "Opportunities", href: "/dashboard/opportunities", icon: BriefcaseBusiness, comingSoon: true },
+  { label: "Discover jobs", href: "/dashboard/discover", icon: Compass },
+  { label: "Opportunities", href: "/dashboard/opportunities", icon: BriefcaseBusiness },
   { label: "Proposals", href: "/dashboard/proposals", icon: FileText, comingSoon: true },
   { label: "Applications", href: "/dashboard/applications", icon: Send, comingSoon: true },
   { label: "Portfolio", href: "/dashboard/portfolio", icon: FolderKanban, comingSoon: true },
