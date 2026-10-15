@@ -2,7 +2,7 @@
 
 ## Phase boundary
 
-Phase 1 provides identity, persistence, secure AI access, the dashboard shell, editable preferences, and replaceable service contracts. It does not discover jobs, score opportunities, generate proposals, schedule agents, notify users, submit applications, or spend Connects.
+Phase 1 provides identity, persistence, secure AI access, the dashboard shell, editable preferences, and replaceable service contracts. Phase 2 adds authorized job discovery, normalization, filtering, manual import, saved searches, detail views, and user-specific job states. It does not score opportunities, generate proposals, schedule monitoring, notify users, submit applications, or spend Connects.
 
 ## Layers
 
@@ -26,3 +26,9 @@ Proposal submission and Connects spending are guarded actions. The domain policy
 ## Future adapters
 
 The `UpworkGateway`, `OpportunityScorer`, `ProposalGenerator`, `BackgroundScheduler`, and `Notifier` interfaces keep providers replaceable. Trigger.dev should implement `BackgroundScheduler` only when background runs enter scope. Upwork access must use an authorized integration; scraping and browser automation are explicitly out of scope.
+
+## Discovery flow
+
+The Upwork adapter uses OAuth 2.0 Authorization Code with PKCE and the official GraphQL endpoint. OAuth state and verifier values live in short-lived HTTP-only cookies. Access and refresh tokens are encrypted with AES-256-GCM before service-role storage. A per-user token bucket limits bursts, provider 429 responses preserve retry guidance, and GraphQL error arrays are handled even when HTTP status is 200.
+
+Provider records and manual records normalize into `NormalizedJob`. Each record retains its permitted source, stable external ID, retrieval time, original permitted payload, and an explicit list of fields the source did not provide. Upwork-derived feed records are excluded after 24 hours to respect the documented cache limit; manual records remain because the user supplied them.
