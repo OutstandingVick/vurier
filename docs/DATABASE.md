@@ -21,3 +21,7 @@ All user data references `auth.users`, cascades safely where appropriate, and is
 Authenticated browser sessions cannot write `discovery_sources`; only trusted service-role code stores encrypted tokens. Saved searches and job states require `auth.uid() = user_id`, and job-state insertion additionally verifies ownership of the referenced job.
 
 Phase 3 adds `profiles.verified_skills`; scoring weights and usage limits to `settings`; and model lineage, factor evidence, gaps, cost estimates, fingerprints, and feedback to `job_analyses`. Ranked and usage indexes support the dashboard and quota aggregation. An ownership trigger prevents any analysis from referencing another user's job, while a partial unique index permits only one active opportunity-analysis batch per user.
+
+Phase 4 extends `portfolio_items` with evidence kind, verified achievements, private file path, verification state, and category. `proposal_strategies` stores the V4 Pro reasoning result and selected evidence. `proposal_versions` stores immutable generated, rewritten, and manual revisions with QA snapshots. `proposals` stores current application estimates, milestones, screening answers, attachments, and QA.
+
+RLS checks authenticated ownership and referenced job/proposal ownership. Storage policies limit the private `portfolio` bucket to paths whose first folder matches `auth.uid()`. Anonymous access is revoked.
