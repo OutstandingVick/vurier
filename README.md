@@ -1,17 +1,17 @@
 # Vurier
 
-Vurier is a personal opportunity-intelligence agent for high-fit Upwork work. The repository currently contains Phase 1 foundations and the **Phase 2 Job Discovery Engine**.
+Vurier is a personal opportunity-intelligence agent for high-fit Upwork work. The repository contains the Phase 1 foundation, Phase 2 discovery engine, and **Phase 3 AI Opportunity Intelligence**.
 
 ## Local setup
 
 1. Install Node.js 20+ and run `npm install`.
 2. Copy `.env.example` to `.env.local` and enter a Supabase project URL, anon key, and server-only DeepSeek key.
-3. Apply `supabase/migrations/20261015000000_phase_1_foundation.sql` to the Supabase project.
+3. Apply every migration in `supabase/migrations` in timestamp order.
 4. In Supabase Auth, enable email/password and add `http://localhost:3000/auth/callback` as a redirect URL.
 5. For official Upwork discovery, request an approved OAuth 2.0 API key, add the Upwork values from `.env.example`, and register the callback URL. Generate `INTEGRATION_ENCRYPTION_KEY` with `openssl rand -base64 32`.
 6. Run `npm run dev` and open `http://localhost:3000`.
 
-When environment values are absent, the marketing and dashboard UI can build for review, and Settings reports each missing connection honestly. Authentication and persistence require Supabase credentials.
+When environment values are absent, the marketing and dashboard UI can build for review, and Settings reports each missing connection honestly. Authentication and persistence require Supabase credentials. Without `DEEPSEEK_API_KEY`, saved jobs still work but analysis stays disabled and no synthetic results are shown.
 
 ## Commands
 
@@ -30,4 +30,4 @@ npm run build
 - Submitting proposals and spending Connects always require explicit user approval.
 - Empty states never represent seeded or mock records as live information.
 
-See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), and [Upwork integration](docs/UPWORK_INTEGRATION.md) for implementation details. Phase 3 must not begin without approval.
+See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [Upwork integration](docs/UPWORK_INTEGRATION.md), and [Opportunity intelligence](docs/OPPORTUNITY_INTELLIGENCE.md) for implementation details. Phase 4 must not begin without approval.
