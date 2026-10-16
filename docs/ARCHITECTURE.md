@@ -2,7 +2,7 @@
 
 ## Phase boundary
 
-Phase 1 provides identity, persistence, secure AI access, the dashboard shell, editable preferences, and replaceable service contracts. Phase 2 adds authorized job discovery and management. Phase 3 adds evidence-based opportunity analysis, deterministic scoring, ranked views, batches, limits, and feedback. It does not generate proposals, schedule monitoring, notify users, submit applications, or spend Connects.
+Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge, proposal strategy, grounded drafting, QA, and versioned editing. It does not schedule monitoring, notify users, submit applications, deploy demos, or spend Connects.
 
 ## Layers
 
@@ -38,3 +38,9 @@ Provider records and manual records normalize into `NormalizedJob`. Each record 
 `core/opportunities` owns the validated AI schema, prompt isolation, deterministic scoring, caching, quota checks, cost estimates, and persistence mapping. Server actions load only the authenticated user's job and evidence, screen with Flash, conditionally escalate to V4 Pro, and persist the inputs used for each recommendation.
 
 The model assesses evidence but never calculates the final weighted score. Configurable weights, thresholds, unavailable-data behavior, and labels remain reproducible and unit-testable. Batches use `agent_runs`, allowing a later Trigger.dev adapter without changing the scoring domain.
+
+## Proposal workflow
+
+`core/proposals` owns evidence matching, untrusted-input prompts, structured strategy/draft schemas, cost calculation, quality checks, and versioning. V4 Pro produces strategy once; Flash produces and rewrites copy. Server actions are the authenticated orchestration boundary and persist through repository functions.
+
+Portfolio files remain private in Supabase Storage. Evidence must be explicitly verified before matching. The editor creates a version on every save, and no route or component calls a submission gateway. Existing explicit approval policies remain intact for future submission work.
