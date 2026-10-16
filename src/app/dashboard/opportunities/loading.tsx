@@ -1,0 +1,2 @@
+import { PageShell } from "@/components/dashboard/page-shell";
+export default function OpportunitiesLoading() { return <PageShell title="Opportunities" description="Loading ranked opportunities"><div className="space-y-4" role="status" aria-label="Loading opportunities">{[1,2,3].map((item) => <div className="h-44 animate-pulse rounded-2xl bg-surface motion-reduce:animate-none" key={item} />)}</div></PageShell>; }
