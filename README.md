@@ -1,6 +1,6 @@
 # Vurier
 
-Vurier is a personal opportunity-intelligence agent for high-fit Upwork work. The repository contains the Phase 1 foundation, Phase 2 discovery engine, and **Phase 3 AI Opportunity Intelligence**.
+Vurier is a personal opportunity-intelligence agent for high-fit Upwork work. The repository contains Phases 1–4: foundation, authorized discovery, opportunity intelligence, and the **Proposal Strategist & Writer**.
 
 ## Local setup
 
@@ -30,4 +30,4 @@ npm run build
 - Submitting proposals and spending Connects always require explicit user approval.
 - Empty states never represent seeded or mock records as live information.
 
-See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [Upwork integration](docs/UPWORK_INTEGRATION.md), and [Opportunity intelligence](docs/OPPORTUNITY_INTELLIGENCE.md) for implementation details. Phase 4 must not begin without approval.
+See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [Upwork integration](docs/UPWORK_INTEGRATION.md), [Opportunity intelligence](docs/OPPORTUNITY_INTELLIGENCE.md), and [Proposal writer](docs/PROPOSAL_WRITER.md). Phase 5 must not begin without approval.
