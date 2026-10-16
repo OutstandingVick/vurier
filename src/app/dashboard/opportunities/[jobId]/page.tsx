@@ -10,6 +10,7 @@ import { PageShell } from "@/components/dashboard/page-shell";
 import { AnalysisBatchForm } from "@/components/opportunities/analysis-batch-form";
 import { AnalysisFactors } from "@/components/opportunities/analysis-factors";
 import { FeedbackControls } from "@/components/opportunities/feedback-controls";
+import { GenerateProposalForm } from "@/components/proposals/generate-proposal-form";
 import { RecommendationBadge } from "@/components/opportunities/recommendation-badge";
 import { ScoreRing } from "@/components/opportunities/score-ring";
 import {
@@ -135,6 +136,7 @@ export default async function OpportunityAnalysisPage({
               analysisId={analysis.id}
               feedback={analysis.feedback}
             />
+            <GenerateProposalForm jobId={job.id} />
             <AnalysisBatchForm
               jobs={[{ id: job.id, title: job.title, analyzed: true }]}
               disabledReason={
