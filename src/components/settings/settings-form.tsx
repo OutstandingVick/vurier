@@ -18,6 +18,8 @@ type InitialSettings = {
   scoringWeights: Record<string, number>;
   dailyAnalysisLimit: number;
   monthlyAiBudgetUsd: number;
+  dailyConnectsLimit: number;
+  monthlyConnectsLimit: number;
 };
 const categoryOptions = [
   "Frontend Development",
@@ -31,6 +33,24 @@ export function SettingsForm({ initial }: { initial: InitialSettings }) {
   const [state, action, pending] = useActionState(saveSettings, {});
   return (
     <form action={action} className="space-y-6">
+      <section className="rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="text-lg font-semibold">Connects guardrails</h2>
+        <p className="mt-1 text-sm text-muted">
+          Approved submissions are blocked before they exceed either limit.
+        </p>
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <NumberField
+            name="dailyConnectsLimit"
+            label="Daily Connects limit"
+            value={initial.dailyConnectsLimit}
+          />
+          <NumberField
+            name="monthlyConnectsLimit"
+            label="Monthly Connects limit"
+            value={initial.monthlyConnectsLimit}
+          />
+        </div>
+      </section>
       <section className="rounded-2xl bg-surface p-5 shadow-card sm:p-6">
         <h2 className="text-lg font-semibold tracking-[-0.02em]">Profile</h2>
         <p className="mt-1 text-sm text-muted">
