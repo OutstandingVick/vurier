@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function disconnectUpworkAction() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return;
   await disconnectUpwork(user.id);
   revalidatePath("/dashboard/settings");
