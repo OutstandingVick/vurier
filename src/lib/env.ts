@@ -16,6 +16,7 @@ const serverEnvSchema = publicEnvSchema.extend({
   UPWORK_SCOPES: z.string().optional(),
   INTEGRATION_ENCRYPTION_KEY: z.string().min(1).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  APPROVAL_SIGNING_KEY: z.string().min(32).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -42,6 +43,7 @@ export function getServerEnv(): ServerEnv {
     UPWORK_SCOPES: process.env.UPWORK_SCOPES,
     INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    APPROVAL_SIGNING_KEY: process.env.APPROVAL_SIGNING_KEY,
   });
 }
 
@@ -57,5 +59,19 @@ export function hasDeepSeekEnv() {
 }
 
 export function hasUpworkEnv() {
-  return Boolean(process.env.UPWORK_CLIENT_ID && process.env.UPWORK_CLIENT_SECRET && process.env.UPWORK_REDIRECT_URI && process.env.INTEGRATION_ENCRYPTION_KEY);
+  return Boolean(
+    process.env.UPWORK_CLIENT_ID &&
+    process.env.UPWORK_CLIENT_SECRET &&
+    process.env.UPWORK_REDIRECT_URI &&
+    process.env.INTEGRATION_ENCRYPTION_KEY,
+  );
+}
+
+export function getApprovalSigningKey() {
+  const key = getServerEnv().APPROVAL_SIGNING_KEY;
+  if (!key)
+    throw new Error(
+      "Application approvals are unavailable until APPROVAL_SIGNING_KEY is configured.",
+    );
+  return key;
 }
