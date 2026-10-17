@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Paperclip } from "lucide-react";
 import { PageShell } from "@/components/dashboard/page-shell";
 import { ProposalEditor } from "@/components/proposals/proposal-editor";
+import { PrepareApplicationForm } from "@/components/applications/prepare-application-form";
 import { ProposalSummary } from "@/components/proposals/proposal-summary";
 import { QualityReport } from "@/components/proposals/quality-report";
 import { StrategyView } from "@/components/proposals/strategy-view";
@@ -60,7 +61,10 @@ export default async function ProposalDetailPage({
           </p>
         </section>
         <StrategyView strategy={strategy} />
-        <ProposalSummary strategy={strategy} attachmentCount={proposal.attachment_ids?.length ?? 0} />
+        <ProposalSummary
+          strategy={strategy}
+          attachmentCount={proposal.attachment_ids?.length ?? 0}
+        />
         <ProposalEditor
           proposalId={proposal.id}
           initialText={proposal.cover_letter}
@@ -82,6 +86,7 @@ export default async function ProposalDetailPage({
           </p>
         </section>
         <VersionHistory versions={versions ?? []} />
+        <PrepareApplicationForm proposalId={proposal.id} />
       </div>
     </PageShell>
   );
