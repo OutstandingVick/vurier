@@ -1,0 +1,48 @@
+create type public.application_status_v2 as enum ('draft','ready_for_review','approved','submitting','submitted','failed','viewed','interviewing','offered','won','lost','rejected','hired','withdrawn');
+alter table public.applications alter column status drop default;
+alter table public.applications alter column status type public.application_status_v2 using status::text::public.application_status_v2;
+drop type public.application_status;
+alter type public.application_status_v2 rename to application_status;
+
+alter table public.applications alter column submitted_at drop not null;
+alter table public.applications alter column connects_spent set default 0;
+alter table public.applications alter column status set default 'draft';
+alter table public.applications add column if not exists job_id uuid references public.jobs(id) on delete restrict;
+alter table public.applications add column if not exists proposal_version_id uuid references public.proposal_versions(id) on delete restrict;
+alter table public.applications add column if not exists application_version integer not null default 1;
+alter table public.applications add column if not exists package jsonb not null default '{}';
+alter table public.applications add column if not exists package_fingerprint text;
+alter table public.applications add column if not exists bid_amount numeric(12,2);
+alter table public.applications add column if not exists connects_cost integer;
+alter table public.applications add column if not exists boost_connects integer not null default 0;
+alter table public.applications add column if not exists manual_apply boolean not null default false;
+alter table public.applications add column if not exists uncertain_submission boolean not null default false;
+alter table public.applications add column if not exists last_error text;
+create unique index if not exists applications_user_job_unique on public.applications(user_id, job_id);
+drop policy if exists "applications_insert_own" on public.applications;
+create policy "applications_insert_own" on public.applications for insert with check ((select auth.uid())=user_id and exists (select 1 from public.proposals p where p.id=proposal_id and p.user_id=(select auth.uid())));
+
+create table public.application_approvals (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, application_id uuid not null references public.applications(id) on delete cascade, application_version integer not null, fingerprint text not null, signature text not null, bid_amount numeric(12,2), connects_cost integer not null, boost_connects integer not null default 0, confirmed_at timestamptz not null default now(), expires_at timestamptz not null, invalidated_at timestamptz, unique(application_id, application_version, fingerprint));
+create table public.application_status_history (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, application_id uuid not null references public.applications(id) on delete cascade, from_status public.application_status, to_status public.application_status not null, source text not null check (source in ('system','upwork_api','manual')), note text, created_at timestamptz not null default now());
+create table public.submission_attempts (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, application_id uuid not null references public.applications(id) on delete cascade, application_version integer not null, idempotency_key text not null unique, status text not null check (status in ('started','succeeded','failed','uncertain','reconciled')), external_id text, error_code text, error_message text, retryable boolean not null default false, started_at timestamptz not null default now(), completed_at timestamptz);
+create table public.connects_ledger (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, application_id uuid references public.applications(id) on delete set null, kind text not null check (kind in ('application','boost','adjustment')), amount integer not null check (amount >= 0), source text not null check (source in ('upwork_api','confirmed_submission','manual')), created_at timestamptz not null default now());
+create table public.notifications (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, kind text not null, title text not null, message text not null, resource_type text, resource_id uuid, read_at timestamptz, created_at timestamptz not null default now());
+create table public.application_audit_logs (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, application_id uuid references public.applications(id) on delete set null, action text not null, metadata jsonb not null default '{}', created_at timestamptz not null default now());
+alter table public.settings add column if not exists daily_connects_limit integer not null default 40 check (daily_connects_limit >= 0);
+alter table public.settings add column if not exists monthly_connects_limit integer not null default 200 check (monthly_connects_limit >= 0);
+
+alter table public.application_approvals enable row level security; alter table public.application_status_history enable row level security; alter table public.submission_attempts enable row level security; alter table public.connects_ledger enable row level security; alter table public.notifications enable row level security; alter table public.application_audit_logs enable row level security;
+create policy "application_approvals_own" on public.application_approvals for all using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+create policy "application_history_own" on public.application_status_history for all using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+create policy "submission_attempts_own" on public.submission_attempts for select using ((select auth.uid())=user_id);
+create policy "submission_attempts_insert_own" on public.submission_attempts for insert with check ((select auth.uid())=user_id);
+create policy "submission_attempts_update_own" on public.submission_attempts for update using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+create policy "connects_ledger_own" on public.connects_ledger for select using ((select auth.uid())=user_id);
+create policy "connects_ledger_insert_own" on public.connects_ledger for insert with check ((select auth.uid())=user_id);
+create policy "notifications_own" on public.notifications for all using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+create policy "application_audit_own" on public.application_audit_logs for select using ((select auth.uid())=user_id);
+create policy "application_audit_insert_own" on public.application_audit_logs for insert with check ((select auth.uid())=user_id);
+grant select,insert,update,delete on public.application_approvals,public.application_status_history,public.notifications to authenticated;
+grant select,insert,update on public.submission_attempts to authenticated;
+grant select,insert on public.connects_ledger,public.application_audit_logs to authenticated;
+revoke all on public.application_approvals,public.application_status_history,public.submission_attempts,public.connects_ledger,public.notifications,public.application_audit_logs from anon;
