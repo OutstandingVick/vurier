@@ -73,7 +73,7 @@ export async function saveProposalVersion(
     .eq("user_id", userId)
     .eq("proposal_id", proposalId);
   if (readError) throw readError;
-  const { error } = await client
+  const { data: savedVersion, error } = await client
     .from("proposal_versions")
     .insert({
       user_id: userId,
@@ -85,11 +85,37 @@ export async function saveProposalVersion(
       tone,
       length,
       qa_result: qa,
-    });
+    })
+    .select("id")
+    .single();
   if (error) throw error;
   await client
     .from("proposals")
     .update({ cover_letter: draft.coverLetter, qa_result: qa })
     .eq("id", proposalId)
     .eq("user_id", userId);
+
+  const { data: affectedApplications } = await client
+    .from("applications")
+    .select("id,application_version")
+    .eq("proposal_id", proposalId)
+    .eq("user_id", userId)
+    .in("status", ["ready_for_review", "approved"]);
+  for (const application of affectedApplications ?? []) {
+    await client
+      .from("applications")
+      .update({
+        status: "draft",
+        proposal_version_id: savedVersion.id,
+        application_version: application.application_version + 1,
+      })
+      .eq("id", application.id)
+      .eq("user_id", userId);
+    await client
+      .from("application_approvals")
+      .update({ invalidated_at: new Date().toISOString() })
+      .eq("application_id", application.id)
+      .eq("user_id", userId)
+      .is("invalidated_at", null);
+  }
 }
