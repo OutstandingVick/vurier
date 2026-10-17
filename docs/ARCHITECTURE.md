@@ -2,7 +2,7 @@
 
 ## Phase boundary
 
-Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge, proposal strategy, grounded drafting, QA, and versioned editing. It does not schedule monitoring, notify users, submit applications, deploy demos, or spend Connects.
+Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge and grounded proposals. Phase 5 adds application preparation, exact-version approval, capability-gated submission, manual fallback, and tracking. It does not schedule monitoring, autonomously submit, purchase Connects, or deploy demos.
 
 ## Layers
 
@@ -17,7 +17,7 @@ Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized dis
 
 Supabase sessions use HTTP-only cookies through `@supabase/ssr`. Protected routes verify the user with `auth.getUser()`, and every data table has ownership-based RLS. DeepSeek credentials are read only in server modules. The browser never receives the API key.
 
-Proposal submission and Connects spending are guarded actions. The domain policy requires a matching approval record; database policy additionally prevents application insertion unless the related proposal has `approved_at` set. The settings schema forces both approval flags to remain enabled.
+Proposal submission and Connects spending are guarded actions. The domain policy requires a current, unexpired, HMAC-signed approval matching the package fingerprint and application version. Material proposal edits invalidate approval. Idempotency records prevent duplicate attempts; uncertain outcomes require reconciliation instead of automatic retry.
 
 ## AI client
 
@@ -43,4 +43,8 @@ The model assesses evidence but never calculates the final weighted score. Confi
 
 `core/proposals` owns evidence matching, untrusted-input prompts, structured strategy/draft schemas, cost calculation, quality checks, and versioning. V4 Pro produces strategy once; Flash produces and rewrites copy. Server actions are the authenticated orchestration boundary and persist through repository functions.
 
-Portfolio files remain private in Supabase Storage. Evidence must be explicitly verified before matching. The editor creates a version on every save, and no route or component calls a submission gateway. Existing explicit approval policies remain intact for future submission work.
+Portfolio files remain private in Supabase Storage. Evidence must be explicitly verified before matching. The editor creates a version on every save. Phase 5 can prepare that immutable version as an application package; later edits return reviewable applications to draft.
+
+## Application workflow
+
+`core/applications` owns package preparation, fingerprints, signed approval policy, state transitions, spending limits, idempotency, provider capabilities, and status mapping. Authenticated server actions orchestrate persistence. The Upwork adapter is the only submission boundary and is invoked only after approval and permission checks. Manual fallback never reports provider confirmation.

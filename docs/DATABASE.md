@@ -25,3 +25,7 @@ Phase 3 adds `profiles.verified_skills`; scoring weights and usage limits to `se
 Phase 4 extends `portfolio_items` with evidence kind, verified achievements, private file path, verification state, and category. `proposal_strategies` stores the V4 Pro reasoning result and selected evidence. `proposal_versions` stores immutable generated, rewritten, and manual revisions with QA snapshots. `proposals` stores current application estimates, milestones, screening answers, attachments, and QA.
 
 RLS checks authenticated ownership and referenced job/proposal ownership. Storage policies limit the private `portfolio` bucket to paths whose first folder matches `auth.uid()`. Anonymous access is revoked.
+
+Phase 5 extends `applications` with a proposal-version reference, immutable package snapshot, application version, exact costs, manual/uncertain flags, and a per-user job uniqueness constraint. `application_approvals` stores short-lived signed confirmations. `application_status_history`, `submission_attempts`, `connects_ledger`, `notifications`, and `application_audit_logs` preserve the workflow and recovery trail. Settings hold non-negative daily and monthly Connects limits.
+
+All Phase 5 tables enforce user ownership with RLS. Attempt idempotency is globally unique, ledger amounts cannot be negative, and application insertion verifies ownership of the related proposal.
