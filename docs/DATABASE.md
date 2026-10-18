@@ -29,3 +29,7 @@ RLS checks authenticated ownership and referenced job/proposal ownership. Storag
 Phase 5 extends `applications` with a proposal-version reference, immutable package snapshot, application version, exact costs, manual/uncertain flags, and a per-user job uniqueness constraint. `application_approvals` stores short-lived signed confirmations. `application_status_history`, `submission_attempts`, `connects_ledger`, `notifications`, and `application_audit_logs` preserve the workflow and recovery trail. Settings hold non-negative daily and monthly Connects limits.
 
 All Phase 5 tables enforce user ownership with RLS. Attempt idempotency is globally unique, ledger amounts cannot be negative, and application insertion verifies ownership of the related proposal.
+
+Phase 6 adds `monitoring_schedules`, `notification_preferences`, `monitoring_runs`, `notification_deliveries`, and `monitoring_errors`. Unique run and delivery keys make Trigger retries safe. Notification rows gain category, action URL, and dismissal fields. Settings gain a non-negative daily AI budget.
+
+Authenticated users may manage only their schedule and preference rows. Run, delivery, and error history is read-only through authenticated sessions; the background worker writes it with the service role. Telegram tokens are stored only as encrypted ciphertext.
