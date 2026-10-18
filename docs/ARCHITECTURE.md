@@ -2,7 +2,7 @@
 
 ## Phase boundary
 
-Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge and grounded proposals. Phase 5 adds application preparation, exact-version approval, capability-gated submission, manual fallback, and tracking. It does not schedule monitoring, autonomously submit, purchase Connects, or deploy demos.
+Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge and grounded proposals. Phase 5 adds explicit-approval applications. Phase 6 adds authorized scheduled discovery, cost-aware analysis, and in-app and Telegram alerts. It does not autonomously submit, purchase Connects, or deploy demos.
 
 ## Layers
 
@@ -48,3 +48,9 @@ Portfolio files remain private in Supabase Storage. Evidence must be explicitly 
 ## Application workflow
 
 `core/applications` owns package preparation, fingerprints, signed approval policy, state transitions, spending limits, idempotency, provider capabilities, and status mapping. Authenticated server actions orchestrate persistence. The Upwork adapter is the only submission boundary and is invoked only after approval and permission checks. Manual fallback never reports provider confirmation.
+
+## Scheduled monitoring
+
+Trigger.dev owns durable timing, retries, maximum duration, and per-user concurrency. `core/monitoring` owns provider-neutral eligibility, quiet hours, limits, ranking, idempotency, and workflow orchestration. Supabase remains the source of truth for schedules and run outcomes, so a Trigger replay cannot duplicate a completed run or alert.
+
+Telegram is a replaceable delivery adapter. Bot tokens use the existing AES-256-GCM vault and are read only by trusted server/background code. In-app notifications retain user ownership and link to persisted opportunities.
