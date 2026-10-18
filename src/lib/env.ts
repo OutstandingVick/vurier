@@ -17,6 +17,8 @@ const serverEnvSchema = publicEnvSchema.extend({
   INTEGRATION_ENCRYPTION_KEY: z.string().min(1).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   APPROVAL_SIGNING_KEY: z.string().min(32).optional(),
+  TRIGGER_SECRET_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -44,6 +46,8 @@ export function getServerEnv(): ServerEnv {
     INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     APPROVAL_SIGNING_KEY: process.env.APPROVAL_SIGNING_KEY,
+    TRIGGER_SECRET_KEY: process.env.TRIGGER_SECRET_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   });
 }
 
