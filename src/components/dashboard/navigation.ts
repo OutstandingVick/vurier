@@ -7,6 +7,8 @@ import {
   LayoutDashboard,
   Send,
   Settings,
+  Bell,
+  Radar,
 } from "lucide-react";
 
 export const dashboardNavigation = [
@@ -23,6 +25,8 @@ export const dashboardNavigation = [
     href: "/dashboard/applications",
     icon: Send,
   },
+  { label: "Monitoring", href: "/dashboard/monitoring", icon: Radar },
+  { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Portfolio", href: "/dashboard/portfolio", icon: FolderKanban },
   {
     label: "Analytics",
