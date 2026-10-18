@@ -4,6 +4,7 @@ import { SettingsForm } from "@/components/settings/settings-form";
 import { PageShell } from "@/components/dashboard/page-shell";
 import { hasDeepSeekEnv, hasSupabaseEnv, hasUpworkEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 export default async function SettingsPage() {
   const fallback = {
@@ -111,6 +112,18 @@ export default async function SettingsPage() {
           connected={upworkStatus === "connected"}
           status={upworkStatus}
         />
+      </div>
+      <div className="mb-6 rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="text-lg font-semibold tracking-[-0.02em]">
+          Monitoring and alerts
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+          Configure authorized job monitoring, AI budgets, quiet hours, and
+          Telegram delivery in the monitoring workspace.
+        </p>
+        <Link className="button-secondary mt-4" href="/dashboard/monitoring">
+          Open monitoring settings
+        </Link>
       </div>
       <SettingsForm initial={initial} />
     </PageShell>
