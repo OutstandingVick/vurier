@@ -145,7 +145,11 @@ export async function saveMonitoringSettings(
     const encryptionKey = env.INTEGRATION_ENCRYPTION_KEY;
     const encryptedToken = parsed.data.telegramBotToken
       ? encryptionKey
-        ? encryptToken(parsed.data.telegramBotToken, encryptionKey)
+        ? encryptToken(
+            parsed.data.telegramBotToken,
+            encryptionKey,
+            `${user.id}:telegram:bot`,
+          )
         : null
       : (currentTelegram?.encrypted_bot_token ?? null);
     if (parsed.data.telegramEnabled && !encryptedToken)

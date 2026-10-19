@@ -45,35 +45,33 @@ type AlertPreferences = {
 
 export async function runMonitoring(input: RunInput) {
   const client = createAdminClient();
-  const { data: existing } = await client
-    .from("monitoring_runs")
-    .select("*")
-    .eq("idempotency_key", input.idempotencyKey)
-    .maybeSingle();
-  if (
-    existing?.status === "completed" ||
-    existing?.status === "partial" ||
-    existing?.status === "skipped"
-  )
-    return existing;
+  const { data: ownedSchedule } = await client
+    .from("monitoring_schedules")
+    .select("user_id")
+    .eq("id", input.scheduleId)
+    .single();
+  if (!ownedSchedule || ownedSchedule.user_id !== input.userId)
+    throw new Error("Monitoring schedule identity mismatch.");
+  const leaseOwner = input.triggerRunId ?? crypto.randomUUID();
+  const { data: claim, error: claimError } = await client
+    .rpc("claim_monitoring_run", {
+      p_user_id: input.userId,
+      p_schedule_id: input.scheduleId,
+      p_idempotency_key: input.idempotencyKey,
+      p_lease_owner: leaseOwner,
+    })
+    .single();
+  if (claimError || !claim)
+    throw claimError ?? new Error("Unable to claim monitoring run.");
+  const claimed = claim as { run_id: string; acquired: boolean };
   const { data: run, error: runError } = await client
     .from("monitoring_runs")
-    .upsert(
-      {
-        user_id: input.userId,
-        schedule_id: input.scheduleId,
-        idempotency_key: input.idempotencyKey,
-        trigger_run_id: input.triggerRunId,
-        status: "running",
-        started_at: new Date().toISOString(),
-        error_code: null,
-        error_message: null,
-      },
-      { onConflict: "idempotency_key" },
-    )
     .select("*")
+    .eq("id", claimed.run_id)
     .single();
-  if (runError) throw runError;
+  if (runError || !run)
+    throw runError ?? new Error("Monitoring run not found.");
+  if (!claimed.acquired) return run;
   const stats: MonitoringStats = {
     discovered: 0,
     analyzed: 0,
@@ -101,10 +99,11 @@ export async function runMonitoring(input: RunInput) {
           },
         ];
     const fetched = [];
+    const upwork = new UpworkApiClient();
     for (const search of searches) {
       const result = await withRetry(
         () =>
-          new UpworkApiClient().searchJobs(
+          upwork.searchJobs(
             token.accessToken,
             search.filters as JobSearchFilters,
             input.userId,
@@ -279,7 +278,7 @@ async function loadContext(
       .from("portfolio_items")
       .select("title,description,skills")
       .eq("user_id", userId)
-      .eq("is_verified", true),
+      .eq("verified", true),
     client.from("saved_searches").select("filters").eq("user_id", userId),
     client
       .from("job_analyses")
@@ -429,7 +428,11 @@ async function deliverAlerts(
         const sent = await withRetry(
           () =>
             new TelegramClient().sendAlert(
-              decryptToken(encryptedBotToken, encryptionKey),
+              decryptToken(
+                encryptedBotToken,
+                encryptionKey,
+                `${input.userId}:telegram:bot`,
+              ),
               telegramChatId,
               {
                 title: input.job.title,
