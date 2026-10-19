@@ -8,6 +8,8 @@ import { ManualPackage } from "@/components/applications/manual-package";
 import { StatusControls } from "@/components/applications/status-controls";
 import { ApplicationTimeline } from "@/components/applications/application-timeline";
 import { SyncStatusForm } from "@/components/applications/sync-status-form";
+import { OutcomeForm } from "@/components/analytics/outcome-form";
+import { ReconciliationPanel } from "@/components/applications/reconciliation-panel";
 import { PageShell } from "@/components/dashboard/page-shell";
 import type {
   ApplicationPackage,
@@ -87,6 +89,9 @@ export default async function ApplicationDetailPage({
           </form>
         ) : null}
         <ApprovalPanel application={app} />
+        {app.uncertain_submission ? (
+          <ReconciliationPanel applicationId={app.id} />
+        ) : null}
         <ManualPackage
           value={pkg}
           enabled={app.manual_apply || app.status === "approved"}
@@ -103,6 +108,7 @@ export default async function ApplicationDetailPage({
           <StatusControls applicationId={app.id} />
         ) : null}
         <ApplicationTimeline history={(history ?? []) as never[]} />
+        <OutcomeForm application={app} />
       </div>
     </PageShell>
   );
