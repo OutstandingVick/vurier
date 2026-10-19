@@ -6,7 +6,7 @@ import {
   UpworkRateLimitError,
 } from "@/integrations/upwork/errors";
 import { normalizeUpworkJob } from "@/integrations/upwork/normalizer";
-import { TokenBucketRateLimiter } from "@/integrations/upwork/rate-limiter";
+import { consumeUpworkRateLimit } from "@/integrations/upwork/distributed-rate-limit";
 
 type GraphQlResponse = {
   data?: {
@@ -99,8 +99,12 @@ function proposalBucket(value: unknown) {
 }
 
 export class UpworkApiClient {
-  private readonly limiter = new TokenBucketRateLimiter();
-  constructor(private readonly fetcher: typeof fetch = fetch) {}
+  constructor(
+    private readonly fetcher: typeof fetch = fetch,
+    private readonly consumeLimit: (
+      userId: string,
+    ) => Promise<void> = consumeUpworkRateLimit,
+  ) {}
 
   async searchJobs(
     accessToken: string,
@@ -108,7 +112,7 @@ export class UpworkApiClient {
     userId: string,
     cursor?: string,
   ): Promise<UpworkSearchResult> {
-    this.limiter.consume(userId);
+    await this.consumeLimit(userId);
     const env = getServerEnv();
     const filter: Record<string, unknown> = {
       pagination_eq: {
@@ -136,6 +140,7 @@ export class UpworkApiClient {
           },
         }),
         cache: "no-store",
+        signal: AbortSignal.timeout(20_000),
       },
     );
     if (response.status === 401 || response.status === 403)
@@ -181,7 +186,7 @@ export class UpworkApiClient {
     accessToken: string,
     userId: string,
   ): Promise<UpworkConnectsSummary> {
-    this.limiter.consume(userId);
+    await this.consumeLimit(userId);
     const payload = await this.graphql(accessToken, CONNECTS_SUMMARY, {});
     const summary = (
       payload.data as { connectsSummary?: UpworkConnectsSummary } | undefined
@@ -197,7 +202,7 @@ export class UpworkApiClient {
     userId: string,
     idempotencyKey: string,
   ): Promise<UpworkSubmissionResult> {
-    this.limiter.consume(userId);
+    await this.consumeLimit(userId);
     let payload: Record<string, unknown>;
     try {
       payload = await this.graphql(
@@ -239,7 +244,7 @@ export class UpworkApiClient {
     proposalId: string,
     userId: string,
   ) {
-    this.limiter.consume(userId);
+    await this.consumeLimit(userId);
     const payload = await this.graphql(accessToken, VENDOR_PROPOSAL, {
       id: proposalId,
     });
@@ -277,6 +282,7 @@ export class UpworkApiClient {
         },
         body: JSON.stringify({ query, variables }),
         cache: "no-store",
+        signal: AbortSignal.timeout(20_000),
       },
     );
     if (response.status === 401 || response.status === 403)

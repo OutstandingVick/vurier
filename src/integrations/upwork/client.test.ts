@@ -4,6 +4,7 @@ import {
   UpworkPermissionError,
   UpworkRateLimitError,
 } from "@/integrations/upwork/errors";
+const noLimit = async () => undefined;
 
 afterEach(() => vi.unstubAllEnvs());
 function configure() {
@@ -16,34 +17,32 @@ function configure() {
 describe("UpworkApiClient", () => {
   it("retrieves and normalizes authorized jobs", async () => {
     configure();
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            data: {
-              marketplaceJobPostingsSearch: {
-                edges: [
-                  {
-                    cursor: "next",
-                    node: {
-                      id: "job_1",
-                      ciphertext: "~job_1",
-                      title: "Next.js engineer",
-                      description: "Build a dashboard",
-                      amount: { amount: 2000, currencyCode: "USD" },
-                    },
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            marketplaceJobPostingsSearch: {
+              edges: [
+                {
+                  cursor: "next",
+                  node: {
+                    id: "job_1",
+                    ciphertext: "~job_1",
+                    title: "Next.js engineer",
+                    description: "Build a dashboard",
+                    amount: { amount: 2000, currencyCode: "USD" },
                   },
-                ],
-                totalCount: 1,
-                pageInfo: { hasNextPage: false },
-              },
+                },
+              ],
+              totalCount: 1,
+              pageInfo: { hasNextPage: false },
             },
-          }),
-          { status: 200 },
-        ),
-      );
-    const result = await new UpworkApiClient(fetcher).searchJobs(
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+    const result = await new UpworkApiClient(fetcher, noLimit).searchJobs(
       "access",
       { query: "Next.js", pageSize: 20 },
       "user-1",
@@ -61,7 +60,7 @@ describe("UpworkApiClient", () => {
       .fn<typeof fetch>()
       .mockResolvedValue(new Response("{}", { status: 403 }));
     await expect(
-      new UpworkApiClient(fetcher).searchJobs("access", {}, "user-1"),
+      new UpworkApiClient(fetcher, noLimit).searchJobs("access", {}, "user-1"),
     ).rejects.toBeInstanceOf(UpworkPermissionError);
   });
   it("honors provider retry windows", async () => {
@@ -72,25 +71,23 @@ describe("UpworkApiClient", () => {
         new Response("{}", { status: 429, headers: { "retry-after": "90" } }),
       );
     await expect(
-      new UpworkApiClient(fetcher).searchJobs("access", {}, "user-1"),
+      new UpworkApiClient(fetcher, noLimit).searchJobs("access", {}, "user-1"),
     ).rejects.toMatchObject({
       retryAfterSeconds: 90,
     } satisfies Partial<UpworkRateLimitError>);
   });
   it("detects GraphQL permission errors returned with HTTP 200", async () => {
     configure();
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            errors: [{ message: "not enough oauth2 permissions/scopes" }],
-          }),
-          { status: 200 },
-        ),
-      );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          errors: [{ message: "not enough oauth2 permissions/scopes" }],
+        }),
+        { status: 200 },
+      ),
+    );
     await expect(
-      new UpworkApiClient(fetcher).searchJobs("access", {}, "user-1"),
+      new UpworkApiClient(fetcher, noLimit).searchJobs("access", {}, "user-1"),
     ).rejects.toBeInstanceOf(UpworkPermissionError);
   });
 
@@ -111,7 +108,10 @@ describe("UpworkApiClient", () => {
       ),
     );
     await expect(
-      new UpworkApiClient(fetcher).getConnectsSummary("access", "user-1"),
+      new UpworkApiClient(fetcher, noLimit).getConnectsSummary(
+        "access",
+        "user-1",
+      ),
     ).resolves.toEqual({
       connectsBalance: 42,
       connectsBalanceFree: null,
@@ -135,7 +135,7 @@ describe("UpworkApiClient", () => {
       ),
     );
     await expect(
-      new UpworkApiClient(fetcher).submitJobProposal(
+      new UpworkApiClient(fetcher, noLimit).submitJobProposal(
         "access",
         { jobPostId: "job-1" },
         "user-1",
@@ -163,7 +163,7 @@ describe("UpworkApiClient", () => {
       ),
     );
     await expect(
-      new UpworkApiClient(fetcher).submitJobProposal(
+      new UpworkApiClient(fetcher, noLimit).submitJobProposal(
         "access",
         {},
         "user-1",
