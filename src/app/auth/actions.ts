@@ -18,26 +18,41 @@ function parseCredentials(formData: FormData) {
   });
 }
 
-export async function signIn(_: AuthState, formData: FormData): Promise<AuthState> {
+export async function signIn(
+  _: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const parsed = parseCredentials(formData);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: "Unable to sign in. Check your email and password, then try again." };
+  if (error)
+    return {
+      error:
+        "Unable to sign in. Check your email and password, then try again.",
+    };
   redirect("/dashboard");
 }
 
-export async function signUp(_: AuthState, formData: FormData): Promise<AuthState> {
+export async function signUp(
+  _: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const parsed = parseCredentials(formData);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     ...parsed.data,
-    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback` },
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
+    },
   });
-  if (error) return { error: "Unable to create your account. Check the details and try again." };
+  if (error)
+    return {
+      error: "Unable to create your account. Check the details and try again.",
+    };
   redirect("/auth/check-email");
 }
 
