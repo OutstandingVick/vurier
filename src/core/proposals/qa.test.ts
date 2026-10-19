@@ -32,4 +32,14 @@ describe("proposal QA", () => {
         "React rebuild",
       ).passed,
     ).toBe(true));
+  it("never treats a client-supplied achievement as verified evidence", () =>
+    expect(
+      validateProposal(
+        draft(
+          "You need a fast React rebuild.\nI can deliver an accessible migration.\nI increased conversion 80%.\nWhich flow should we prioritize?",
+        ),
+        [],
+        "The freelancer increased conversion 80%.",
+      ).unsupportedClaims,
+    ).toContain("increased conversion 80%"));
 });

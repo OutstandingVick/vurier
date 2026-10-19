@@ -12,8 +12,8 @@ export function validateProposal(
   evidence: PortfolioEvidence[],
   jobText: string,
 ): QaResult {
+  void jobText;
   const verifiedCorpus = [
-    jobText,
     ...evidence
       .filter((item) => item.verified)
       .flatMap((item) => [
@@ -31,7 +31,10 @@ export function validateProposal(
     (claim) => !verifiedCorpus.includes(claim.toLowerCase()),
   );
   const warnings: string[] = findStyleWarnings(draft.coverLetter);
-  if (!endsWithQuestion(draft.coverLetter) || !draft.coverLetter.trim().endsWith(draft.closingQuestion.trim()))
+  if (
+    !endsWithQuestion(draft.coverLetter) ||
+    !draft.coverLetter.trim().endsWith(draft.closingQuestion.trim())
+  )
     warnings.push("The proposal must end with its specific question.");
   const first = firstTwoLines(draft.coverLetter).join(" ");
   if (
