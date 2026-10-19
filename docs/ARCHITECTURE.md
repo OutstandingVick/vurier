@@ -2,7 +2,7 @@
 
 ## Phase boundary
 
-Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge and grounded proposals. Phase 5 adds explicit-approval applications. Phase 6 adds authorized scheduled discovery, cost-aware analysis, and in-app and Telegram alerts. It does not autonomously submit, purchase Connects, or deploy demos.
+Phase 1 provides identity and secure infrastructure. Phase 2 adds authorized discovery. Phase 3 adds opportunity analysis. Phase 4 adds verified portfolio knowledge and grounded proposals. Phase 5 adds explicit-approval applications. Phase 6 adds authorized scheduled discovery, cost-aware analysis, and in-app and Telegram alerts. Phase 7 adds portfolio matching and user-reviewed proof-of-work strategy. It does not autonomously submit, purchase Connects, build, publish, or deploy demos.
 
 ## Layers
 
@@ -54,3 +54,9 @@ Portfolio files remain private in Supabase Storage. Evidence must be explicitly 
 Trigger.dev owns durable timing, retries, maximum duration, and per-user concurrency. `core/monitoring` owns provider-neutral eligibility, quiet hours, limits, ranking, idempotency, and workflow orchestration. Supabase remains the source of truth for schedules and run outcomes, so a Trigger replay cannot duplicate a completed run or alert.
 
 Telegram is a replaceable delivery adapter. Bot tokens use the existing AES-256-GCM vault and are read only by trusted server/background code. In-app notifications retain user ownership and link to persisted opportunities.
+
+## Portfolio and demo intelligence
+
+`core/demos` owns verified-evidence ranking, artifact-kind selection, deterministic ROI, structured model schemas, untrusted-input prompts, budget checks, caching, URL safety, and attachment eligibility. V4 Pro supplies strategic judgment; Flash supplies the editable brief and implementation prompt. Neither model controls the final ROI formula or attachment approval.
+
+Authenticated server actions load owned jobs and verified portfolio records, sanitize model-selected IDs against that set, and persist through the Phase 7 repository. The database repeats ownership validation with RLS and a trigger. A completed demo is still not proposal evidence until the user explicitly verifies and attaches it. That attachment creates a new proposal version and flows through the existing application-approval invalidation boundary.

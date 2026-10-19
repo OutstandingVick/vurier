@@ -33,3 +33,7 @@ All Phase 5 tables enforce user ownership with RLS. Attempt idempotency is globa
 Phase 6 adds `monitoring_schedules`, `notification_preferences`, `monitoring_runs`, `notification_deliveries`, and `monitoring_errors`. Unique run and delivery keys make Trigger retries safe. Notification rows gain category, action URL, and dismissal fields. Settings gain a non-negative daily AI budget.
 
 Authenticated users may manage only their schedule and preference rows. Run, delivery, and error history is read-only through authenticated sessions; the background worker writes it with the service role. Telegram tokens are stored only as encrypted ciphertext.
+
+Phase 7 adds `demo_strategies`, `demo_references`, `demo_assets`, and `proposal_demo_assets`. Strategies retain deterministic ROI factors, unavailable inputs, model lineage, selected verified evidence, token usage, estimated cost, brief, and implementation prompt. References retain their source and verification response; assets retain progress and explicit user verification.
+
+RLS isolates every row by user and referenced ownership. A trigger rejects unverified or foreign portfolio evidence. Proposal links accept only completed, verified assets produced for the same job. Demo files live in the private `demos` bucket under a user-owned path.
