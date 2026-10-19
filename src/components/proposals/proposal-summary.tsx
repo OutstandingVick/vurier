@@ -1,2 +1,38 @@
 import type { ProposalStrategy } from "@/core/proposals/types";
-export function ProposalSummary({ strategy, attachmentCount }: { strategy: ProposalStrategy; attachmentCount: number }) { return <section className="grid gap-3 sm:grid-cols-3" aria-label="Application estimates"><div className="rounded-2xl bg-surface p-4 shadow-card"><p className="text-xs font-semibold uppercase text-muted">Bid estimate</p><p className="mt-1 font-semibold">{strategy.suggestedBid.amount === null ? "Unavailable" : `${strategy.suggestedBid.currency} ${strategy.suggestedBid.amount.toLocaleString()}`}</p></div><div className="rounded-2xl bg-surface p-4 shadow-card"><p className="text-xs font-semibold uppercase text-muted">Timeline estimate</p><p className="mt-1 font-semibold">{strategy.timeline.value}</p></div><div className="rounded-2xl bg-surface p-4 shadow-card"><p className="text-xs font-semibold uppercase text-muted">Evidence</p><p className="mt-1 font-semibold">{attachmentCount} attachment{attachmentCount === 1 ? "" : "s"}</p></div></section>; }
+export function ProposalSummary({
+  strategy,
+  attachmentCount,
+}: {
+  strategy: ProposalStrategy;
+  attachmentCount: number;
+}) {
+  return (
+    <section
+      className="grid gap-3 sm:grid-cols-3"
+      aria-label="Application estimates"
+    >
+      <div className="rounded-2xl bg-surface p-4 shadow-card">
+        <p className="text-xs font-semibold uppercase text-muted">
+          Bid estimate
+        </p>
+        <p className="mt-1 font-semibold">
+          {strategy.suggestedBid.amount === null
+            ? "Unavailable"
+            : `${strategy.suggestedBid.currency} ${strategy.suggestedBid.amount.toLocaleString()}`}
+        </p>
+      </div>
+      <div className="rounded-2xl bg-surface p-4 shadow-card">
+        <p className="text-xs font-semibold uppercase text-muted">
+          Timeline estimate
+        </p>
+        <p className="mt-1 font-semibold">{strategy.timeline.value}</p>
+      </div>
+      <div className="rounded-2xl bg-surface p-4 shadow-card">
+        <p className="text-xs font-semibold uppercase text-muted">Evidence</p>
+        <p className="mt-1 font-semibold">
+          {attachmentCount} attachment{attachmentCount === 1 ? "" : "s"}
+        </p>
+      </div>
+    </section>
+  );
+}
