@@ -17,7 +17,11 @@ export function validateWeights(weights: ScoringWeights): ScoringWeights {
   return weights;
 }
 export function recommendationFor(score: number): Recommendation {
-  return score >= RECOMMENDATION_THRESHOLDS.apply ? "apply" : score >= RECOMMENDATION_THRESHOLDS.consider ? "consider" : "skip";
+  return score >= RECOMMENDATION_THRESHOLDS.apply
+    ? "apply"
+    : score >= RECOMMENDATION_THRESHOLDS.consider
+      ? "consider"
+      : "skip";
 }
 export function calculateOpportunityScore(
   factors: FactorAssessments,

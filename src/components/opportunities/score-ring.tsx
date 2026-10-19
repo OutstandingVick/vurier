@@ -1,1 +1,16 @@
-export function ScoreRing({ score, confidence }: { score: number; confidence: number }) { return <div className="grid size-20 shrink-0 place-items-center rounded-full border-8 border-accent bg-surface" aria-label={`Match score ${score} out of 100, confidence ${confidence} percent`}><span className="text-xl font-bold tabular-nums">{score}</span></div>; }
+export function ScoreRing({
+  score,
+  confidence,
+}: {
+  score: number;
+  confidence: number;
+}) {
+  return (
+    <div
+      className="grid size-20 shrink-0 place-items-center rounded-full border-8 border-accent bg-surface"
+      aria-label={`Match score ${score} out of 100, confidence ${confidence} percent`}
+    >
+      <span className="text-xl font-bold tabular-nums">{score}</span>
+    </div>
+  );
+}

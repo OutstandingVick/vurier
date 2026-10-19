@@ -88,17 +88,34 @@ export default async function OpportunitiesPage({
       <div className="space-y-6">
         <div className="grid gap-3 lg:grid-cols-2">
           <RecommendationLegend />
-          <UsageSummary analyses={rows.filter((row) => row.analysis).length} estimatedCostUsd={rows.reduce((sum, row) => sum + Number(row.analysis?.estimated_cost_usd ?? 0), 0)} />
+          <UsageSummary
+            analyses={rows.filter((row) => row.analysis).length}
+            estimatedCostUsd={rows.reduce(
+              (sum, row) => sum + Number(row.analysis?.estimated_cost_usd ?? 0),
+              0,
+            )}
+          />
         </div>
-        {activeRun ? <BatchStatus run={activeRun as { id: string; metadata: { total?: number; completed?: number; failed?: number } | null }} /> : null}
+        {activeRun ? (
+          <BatchStatus
+            run={
+              activeRun as {
+                id: string;
+                metadata: {
+                  total?: number;
+                  completed?: number;
+                  failed?: number;
+                } | null;
+              }
+            }
+          />
+        ) : null}
         <AnalysisBatchForm
-          jobs={rows
-            .slice(0, 25)
-            .map(({ job, analysis }) => ({
-              id: job.id,
-              title: job.title,
-              analyzed: Boolean(analysis),
-            }))}
+          jobs={rows.slice(0, 25).map(({ job, analysis }) => ({
+            id: job.id,
+            title: job.title,
+            analyzed: Boolean(analysis),
+          }))}
           disabledReason={
             !hasDeepSeekEnv()
               ? "DeepSeek is not configured. Add the API key in your server environment."
