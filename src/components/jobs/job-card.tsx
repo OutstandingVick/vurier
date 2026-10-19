@@ -1,10 +1,149 @@
 import Link from "next/link";
-import { Bookmark, BriefcaseBusiness, CircleDollarSign, Clock3, EyeOff, MapPin, Save, ShieldCheck } from "lucide-react";
+import {
+  Bookmark,
+  BriefcaseBusiness,
+  CircleDollarSign,
+  Clock3,
+  EyeOff,
+  MapPin,
+  Save,
+  ShieldCheck,
+} from "lucide-react";
 import { setJobState } from "@/app/dashboard/discover/actions";
-import { formatBudget, formatRelativeTime, proposalLabels } from "@/core/jobs/format";
+import {
+  formatBudget,
+  formatRelativeTime,
+  proposalLabels,
+} from "@/core/jobs/format";
 import type { JobFeedItem } from "@/core/jobs/view-model";
 
 export function JobCard({ job }: { job: JobFeedItem }) {
-  const update = async (state: "saved" | "bookmarked" | "hidden" | "tracking" | "none") => { "use server"; await setJobState(job.id, state); };
-  return <article className="rounded-2xl bg-surface p-5 shadow-card sm:p-6"><div className="flex items-start gap-4"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted"><span className="rounded-full bg-surface-muted px-2.5 py-1">{job.source === "manual" ? "Manual import" : "Upwork API"}</span><span className="inline-flex items-center gap-1"><Clock3 className="size-3.5" aria-hidden="true" />{formatRelativeTime(job.published_at)}</span></div><h2 className="mt-3 text-balance text-lg font-semibold tracking-[-0.02em]"><Link className="outline-none hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-accent-strong" href={`/dashboard/discover/${job.id}`}>{job.title}</Link></h2></div><form action={update.bind(null, job.state === "bookmarked" ? "none" : "bookmarked")}><button className="grid size-10 place-items-center rounded-xl border text-muted outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-accent-strong" type="submit" aria-label={job.state === "bookmarked" ? "Remove bookmark" : "Bookmark opportunity"}><Bookmark className="size-4" fill={job.state === "bookmarked" ? "currentColor" : "none"} aria-hidden="true" /></button></form></div><p className="mt-3 line-clamp-3 text-pretty text-sm leading-6 text-muted">{job.description}</p><div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted"><span className="inline-flex items-center gap-1.5 font-medium text-foreground"><CircleDollarSign className="size-4" aria-hidden="true" />{formatBudget(job)}</span><span className="inline-flex items-center gap-1.5"><BriefcaseBusiness className="size-4" aria-hidden="true" />{job.experience_level === "unknown" ? "Experience unavailable" : job.experience_level}</span><span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4" aria-hidden="true" />{job.client_payment_verification === "verified" ? "Payment verified" : job.client_payment_verification === "unverified" ? "Payment unverified" : "Verification unavailable"}</span>{job.client_country ? <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" aria-hidden="true" />{job.client_country}</span> : null}</div>{job.skills.length ? <ul className="mt-4 flex flex-wrap gap-2" aria-label="Required skills">{job.skills.slice(0, 6).map((skill) => <li className="rounded-lg bg-surface-muted px-2.5 py-1 text-xs font-medium text-muted" key={skill}>{skill}</li>)}</ul> : null}<div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"><span className="text-xs font-medium text-muted">{proposalLabels[job.proposal_count as keyof typeof proposalLabels] ?? "Proposal count unavailable"}</span><div className="flex flex-wrap items-center gap-2"><form action={update.bind(null, job.state === "saved" ? "none" : "saved")}><button className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-accent-strong" type="submit"><Save className="size-4" aria-hidden="true" />{job.state === "saved" ? "Saved" : "Save"}</button></form><form action={update.bind(null, "hidden")}><button className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-accent-strong" type="submit"><EyeOff className="size-4" aria-hidden="true" />Hide</button></form><Link className="button-secondary min-h-10 py-2" href={`/dashboard/discover/${job.id}`}>View details</Link></div></div></article>;
+  const update = async (
+    state: "saved" | "bookmarked" | "hidden" | "tracking" | "none",
+  ) => {
+    "use server";
+    await setJobState(job.id, state);
+  };
+  return (
+    <article className="rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
+            <span className="rounded-full bg-surface-muted px-2.5 py-1">
+              {job.source === "manual" ? "Manual import" : "Upwork API"}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Clock3 className="size-3.5" aria-hidden="true" />
+              {formatRelativeTime(job.published_at)}
+            </span>
+          </div>
+          <h2 className="mt-3 text-balance text-lg font-semibold tracking-[-0.02em]">
+            <Link
+              className="outline-none hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-accent-strong"
+              href={`/dashboard/discover/${job.id}`}
+            >
+              {job.title}
+            </Link>
+          </h2>
+        </div>
+        <form
+          action={update.bind(
+            null,
+            job.state === "bookmarked" ? "none" : "bookmarked",
+          )}
+        >
+          <button
+            className="grid size-10 place-items-center rounded-xl border text-muted outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-accent-strong"
+            type="submit"
+            aria-label={
+              job.state === "bookmarked"
+                ? "Remove bookmark"
+                : "Bookmark opportunity"
+            }
+          >
+            <Bookmark
+              className="size-4"
+              fill={job.state === "bookmarked" ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+          </button>
+        </form>
+      </div>
+      <p className="mt-3 line-clamp-3 text-pretty text-sm leading-6 text-muted">
+        {job.description}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
+        <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+          <CircleDollarSign className="size-4" aria-hidden="true" />
+          {formatBudget(job)}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <BriefcaseBusiness className="size-4" aria-hidden="true" />
+          {job.experience_level === "unknown"
+            ? "Experience unavailable"
+            : job.experience_level}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <ShieldCheck className="size-4" aria-hidden="true" />
+          {job.client_payment_verification === "verified"
+            ? "Payment verified"
+            : job.client_payment_verification === "unverified"
+              ? "Payment unverified"
+              : "Verification unavailable"}
+        </span>
+        {job.client_country ? (
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin className="size-4" aria-hidden="true" />
+            {job.client_country}
+          </span>
+        ) : null}
+      </div>
+      {job.skills.length ? (
+        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Required skills">
+          {job.skills.slice(0, 6).map((skill) => (
+            <li
+              className="rounded-lg bg-surface-muted px-2.5 py-1 text-xs font-medium text-muted"
+              key={skill}
+            >
+              {skill}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+        <span className="text-xs font-medium text-muted">
+          {proposalLabels[job.proposal_count as keyof typeof proposalLabels] ??
+            "Proposal count unavailable"}
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <form
+            action={update.bind(null, job.state === "saved" ? "none" : "saved")}
+          >
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-accent-strong"
+              type="submit"
+            >
+              <Save className="size-4" aria-hidden="true" />
+              {job.state === "saved" ? "Saved" : "Save"}
+            </button>
+          </form>
+          <form action={update.bind(null, "hidden")}>
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-accent-strong"
+              type="submit"
+            >
+              <EyeOff className="size-4" aria-hidden="true" />
+              Hide
+            </button>
+          </form>
+          <Link
+            className="button-secondary min-h-10 py-2"
+            href={`/dashboard/discover/${job.id}`}
+          >
+            View details
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
 }
