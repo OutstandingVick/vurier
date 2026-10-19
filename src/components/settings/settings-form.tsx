@@ -20,6 +20,9 @@ type InitialSettings = {
   monthlyAiBudgetUsd: number;
   dailyConnectsLimit: number;
   monthlyConnectsLimit: number;
+  connectsUsdRate: number;
+  monthlyResearchBudgetUsd: number;
+  feedbackMaxAdjustment: number;
 };
 const categoryOptions = [
   "Frontend Development",
@@ -48,6 +51,12 @@ export function SettingsForm({ initial }: { initial: InitialSettings }) {
             name="monthlyConnectsLimit"
             label="Monthly Connects limit"
             value={initial.monthlyConnectsLimit}
+          />
+          <NumberField
+            name="connectsUsdRate"
+            label="Estimated USD per Connect"
+            value={initial.connectsUsdRate}
+            step="0.0001"
           />
         </div>
       </section>
@@ -176,6 +185,18 @@ export function SettingsForm({ initial }: { initial: InitialSettings }) {
             label="Monthly estimated budget (USD)"
             value={initial.monthlyAiBudgetUsd}
             step="0.01"
+          />
+          <NumberField
+            name="monthlyResearchBudgetUsd"
+            label="Monthly research budget (USD)"
+            value={initial.monthlyResearchBudgetUsd}
+            step="0.01"
+          />
+          <NumberField
+            name="feedbackMaxAdjustment"
+            label="Maximum feedback adjustment (points)"
+            value={initial.feedbackMaxAdjustment}
+            step="0.5"
           />
         </div>
         <input type="hidden" name="model" value={initial.model} />

@@ -39,6 +39,9 @@ const settingsSchema = z.object({
   monthlyAiBudgetUsd: z.coerce.number().min(0.01).max(1000),
   dailyConnectsLimit: z.coerce.number().int().min(0).max(10000),
   monthlyConnectsLimit: z.coerce.number().int().min(0).max(100000),
+  connectsUsdRate: z.coerce.number().min(0).max(100),
+  monthlyResearchBudgetUsd: z.coerce.number().min(0).max(100000),
+  feedbackMaxAdjustment: z.coerce.number().min(0).max(10),
   skillMatch: z.coerce.number().nonnegative(),
   portfolioRelevance: z.coerce.number().nonnegative(),
   budgetValue: z.coerce.number().nonnegative(),
@@ -66,6 +69,9 @@ export async function saveSettings(
     monthlyAiBudgetUsd: formData.get("monthlyAiBudgetUsd"),
     dailyConnectsLimit: formData.get("dailyConnectsLimit"),
     monthlyConnectsLimit: formData.get("monthlyConnectsLimit"),
+    connectsUsdRate: formData.get("connectsUsdRate"),
+    monthlyResearchBudgetUsd: formData.get("monthlyResearchBudgetUsd"),
+    feedbackMaxAdjustment: formData.get("feedbackMaxAdjustment"),
     skillMatch: formData.get("skillMatch"),
     portfolioRelevance: formData.get("portfolioRelevance"),
     budgetValue: formData.get("budgetValue"),
@@ -120,6 +126,9 @@ export async function saveSettings(
       monthly_ai_budget_usd: parsed.data.monthlyAiBudgetUsd,
       daily_connects_limit: parsed.data.dailyConnectsLimit,
       monthly_connects_limit: parsed.data.monthlyConnectsLimit,
+      connects_usd_rate: parsed.data.connectsUsdRate,
+      monthly_research_budget_usd: parsed.data.monthlyResearchBudgetUsd,
+      feedback_max_adjustment: parsed.data.feedbackMaxAdjustment,
     })
     .eq("user_id", user.id);
   if (profileResult.error || settingsResult.error)

@@ -30,6 +30,9 @@ export default async function SettingsPage() {
     monthlyAiBudgetUsd: 10,
     dailyConnectsLimit: 40,
     monthlyConnectsLimit: 200,
+    connectsUsdRate: 0.15,
+    monthlyResearchBudgetUsd: 0,
+    feedbackMaxAdjustment: 5,
   };
   let initial = fallback;
   let upworkStatus: string | undefined;
@@ -48,13 +51,13 @@ export default async function SettingsPage() {
         supabase
           .from("settings")
           .select(
-            "preferred_categories,minimum_fixed_budget,minimum_hourly_rate,maximum_connects_per_job,preferred_model,reasoning_effort,scoring_weights,daily_analysis_limit,monthly_ai_budget_usd,daily_connects_limit,monthly_connects_limit",
+            "preferred_categories,minimum_fixed_budget,minimum_hourly_rate,maximum_connects_per_job,preferred_model,reasoning_effort,scoring_weights,daily_analysis_limit,monthly_ai_budget_usd,daily_connects_limit,monthly_connects_limit,connects_usd_rate,monthly_research_budget_usd,feedback_max_adjustment",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
       ]);
       const { data: upwork } = await supabase
-        .from("discovery_sources")
+        .from("discovery_source_status")
         .select("status")
         .eq("user_id", user.id)
         .eq("provider", "upwork_api")
@@ -81,6 +84,16 @@ export default async function SettingsPage() {
           settings?.daily_connects_limit ?? fallback.dailyConnectsLimit,
         monthlyConnectsLimit:
           settings?.monthly_connects_limit ?? fallback.monthlyConnectsLimit,
+        connectsUsdRate: Number(
+          settings?.connects_usd_rate ?? fallback.connectsUsdRate,
+        ),
+        monthlyResearchBudgetUsd: Number(
+          settings?.monthly_research_budget_usd ??
+            fallback.monthlyResearchBudgetUsd,
+        ),
+        feedbackMaxAdjustment: Number(
+          settings?.feedback_max_adjustment ?? fallback.feedbackMaxAdjustment,
+        ),
       };
     }
   }
