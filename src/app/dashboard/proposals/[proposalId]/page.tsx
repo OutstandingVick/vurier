@@ -8,6 +8,7 @@ import { ProposalSummary } from "@/components/proposals/proposal-summary";
 import { QualityReport } from "@/components/proposals/quality-report";
 import { StrategyView } from "@/components/proposals/strategy-view";
 import { VersionHistory } from "@/components/proposals/version-history";
+import { ProposalAssets } from "@/components/demos/proposal-assets";
 import type { ProposalStrategy, QaResult } from "@/core/proposals/types";
 import { createClient } from "@/lib/supabase/server";
 export const instant = false;
@@ -39,6 +40,21 @@ export default async function ProposalDetailPage({
       .order("version_number", { ascending: false }),
   ]);
   if (!proposal) notFound();
+  const { data: strategies } = await client
+    .from("demo_strategies")
+    .select("id")
+    .eq("job_id", proposal.job_id)
+    .eq("user_id", user.id);
+  const strategyIds = (strategies ?? []).map((item) => item.id);
+  const { data: demoAssets } = strategyIds.length
+    ? await client
+        .from("demo_assets")
+        .select("id,title,status,url,file_path,verified")
+        .eq("user_id", user.id)
+        .in("strategy_id", strategyIds)
+        .eq("status", "completed")
+        .eq("verified", true)
+    : { data: [] };
   const strategy = proposal.proposal_strategies?.strategy as ProposalStrategy;
   return (
     <PageShell
@@ -77,7 +93,8 @@ export default async function ProposalDetailPage({
           </h2>
           <p className="mt-2 text-sm text-muted">
             Suggested bid and timeline are estimates. Attachments are selected
-            only from verified portfolio evidence.
+            only from verified portfolio evidence or completed proof of work
+            that you explicitly approve.
           </p>
           <p className="mt-3 text-sm">
             {proposal.attachment_ids?.length ?? 0} suggested attachment(s) ·{" "}
@@ -85,6 +102,7 @@ export default async function ProposalDetailPage({
             {proposal.screening_answers?.length ?? 0} screening answer(s)
           </p>
         </section>
+        <ProposalAssets proposalId={proposal.id} assets={demoAssets ?? []} />
         <VersionHistory versions={versions ?? []} />
         <PrepareApplicationForm proposalId={proposal.id} />
       </div>
