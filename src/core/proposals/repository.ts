@@ -4,6 +4,7 @@ import type {
   ProposalGenerationResult,
 } from "@/core/proposals/types";
 import { nextVersionNumber } from "@/core/proposals/versioning";
+import { createAdminClient } from "@/lib/supabase/admin";
 export async function saveGeneratedProposal(
   client: SupabaseClient,
   userId: string,
@@ -95,14 +96,15 @@ export async function saveProposalVersion(
     .eq("id", proposalId)
     .eq("user_id", userId);
 
-  const { data: affectedApplications } = await client
+  const workflowClient = createAdminClient();
+  const { data: affectedApplications } = await workflowClient
     .from("applications")
     .select("id,application_version")
     .eq("proposal_id", proposalId)
     .eq("user_id", userId)
     .in("status", ["ready_for_review", "approved"]);
   for (const application of affectedApplications ?? []) {
-    await client
+    await workflowClient
       .from("applications")
       .update({
         status: "draft",
@@ -111,7 +113,7 @@ export async function saveProposalVersion(
       })
       .eq("id", application.id)
       .eq("user_id", userId);
-    await client
+    await workflowClient
       .from("application_approvals")
       .update({ invalidated_at: new Date().toISOString() })
       .eq("application_id", application.id)

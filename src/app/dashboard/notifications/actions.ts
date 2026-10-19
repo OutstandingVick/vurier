@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 async function updateNotification(
   formData: FormData,
@@ -15,7 +16,7 @@ async function updateNotification(
     data: { user },
   } = await client.auth.getUser();
   if (!user) return;
-  await client
+  await createAdminClient()
     .from("notifications")
     .update(values)
     .eq("id", id.data)
@@ -37,7 +38,7 @@ export async function markAllNotificationsRead() {
     data: { user },
   } = await client.auth.getUser();
   if (user)
-    await client
+    await createAdminClient()
       .from("notifications")
       .update({ read_at: new Date().toISOString() })
       .eq("user_id", user.id)
