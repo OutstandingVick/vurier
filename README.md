@@ -1,6 +1,6 @@
 # Vurier
 
-Vurier is a personal opportunity-intelligence agent for high-fit Upwork work. The repository contains Phases 1–7: foundation, authorized discovery, opportunity intelligence, proposal writing, explicit-approval applications, scheduled monitoring, and **Portfolio & Demo Intelligence**.
+Vurier is a personal opportunity-intelligence agent for high-fit Upwork work. The repository contains Phases 1–8, culminating in **Analytics, Optimization & Production Readiness**.
 
 ## Local setup
 
@@ -32,4 +32,4 @@ npm run build
 - Submitting proposals and spending Connects always require explicit user approval.
 - Empty states never represent seeded or mock records as live information.
 
-See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [Upwork integration](docs/UPWORK_INTEGRATION.md), [Opportunity intelligence](docs/OPPORTUNITY_INTELLIGENCE.md), [Proposal writer](docs/PROPOSAL_WRITER.md), [Application workflow](docs/APPLICATION_WORKFLOW.md), [Monitoring and notifications](docs/MONITORING_AND_NOTIFICATIONS.md), and [Portfolio and demo intelligence](docs/PORTFOLIO_DEMO_INTELLIGENCE.md). Phase 8 must not begin without approval.
+See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [Production operations](docs/PRODUCTION_OPERATIONS.md), [Security review](docs/SECURITY_REVIEW.md), and the [Phase 8 production-readiness report](docs/PRODUCTION_READINESS.md). Production deployment requires explicit approval.

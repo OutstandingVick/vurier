@@ -60,3 +60,9 @@ Telegram is a replaceable delivery adapter. Bot tokens use the existing AES-256-
 `core/demos` owns verified-evidence ranking, artifact-kind selection, deterministic ROI, structured model schemas, untrusted-input prompts, budget checks, caching, URL safety, and attachment eligibility. V4 Pro supplies strategic judgment; Flash supplies the editable brief and implementation prompt. Neither model controls the final ROI formula or attachment approval.
 
 Authenticated server actions load owned jobs and verified portfolio records, sanitize model-selected IDs against that set, and persist through the Phase 7 repository. The database repeats ownership validation with RLS and a trigger. A completed demo is still not proposal evidence until the user explicitly verifies and attaches it. That attachment creates a new proposal version and flows through the existing application-approval invalidation boundary.
+
+## Analytics and production operations
+
+`core/analytics` calculates date windows, comparison metrics, funnels, application ROI, cost reports, strategy associations, reliability, and bounded feedback adjustments from persisted user records. The UI labels provider costs and unconfirmed outcomes as estimates. Feedback optimization requires at least three outcomes per category, is capped by the user's setting, remains explainable, and can be disabled or rolled back.
+
+Database reservations serialize Connects and AI-budget decisions before external calls. Monitoring leases and provider rate limits remain durable across serverless instances. Privileged workflow writes use a service client only after a verified user session and explicit ownership filters; browser sessions retain read-only access to authoritative workflow records.

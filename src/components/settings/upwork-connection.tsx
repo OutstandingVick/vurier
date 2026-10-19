@@ -1,6 +1,73 @@
 import { Cable, CheckCircle2, Unplug } from "lucide-react";
 import { disconnectUpworkAction } from "@/app/dashboard/settings/integration-actions";
 
-export function UpworkConnection({ configured, connected, status }: { configured: boolean; connected: boolean; status?: string }) {
-  return <section className="rounded-2xl bg-surface p-5 shadow-card sm:p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2"><span className={`grid size-9 place-items-center rounded-xl ${connected ? "bg-accent/20 text-accent-strong" : "bg-surface-muted text-muted"}`}>{connected ? <CheckCircle2 className="size-4" aria-hidden="true" /> : <Cable className="size-4" aria-hidden="true" />}</span><div><h2 className="font-semibold">Upwork authorized discovery</h2><p className="text-sm text-muted">{connected ? "Connected through the official integration" : configured ? "Ready to connect" : "API credentials are not configured"}</p></div></div><p className="mt-4 max-w-2xl text-sm leading-6 text-muted">Vurier uses only Upwork-authorized access. It does not scrape pages, extract session cookies, or bypass provider restrictions.</p>{status === "permission_denied" ? <p className="mt-3 text-sm text-danger" role="alert">The current connection does not include job discovery permission. Reconnect with the required scope.</p> : null}</div><div className="shrink-0">{connected ? <form action={disconnectUpworkAction}><button className="button-secondary" type="submit"><Unplug className="size-4" aria-hidden="true" />Disconnect</button></form> : configured ? <a className="button-primary" href="/api/integrations/upwork/connect">Connect Upwork</a> : <span className="inline-flex min-h-11 items-center rounded-xl bg-surface-muted px-4 text-sm font-medium text-muted">Unavailable</span>}</div></div></section>;
+export function UpworkConnection({
+  configured,
+  connected,
+  status,
+}: {
+  configured: boolean;
+  connected: boolean;
+  status?: string;
+}) {
+  return (
+    <section className="rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`grid size-9 place-items-center rounded-xl ${connected ? "bg-accent/20 text-accent-strong" : "bg-surface-muted text-muted"}`}
+            >
+              {connected ? (
+                <CheckCircle2 className="size-4" aria-hidden="true" />
+              ) : (
+                <Cable className="size-4" aria-hidden="true" />
+              )}
+            </span>
+            <div>
+              <h2 className="font-semibold">Upwork authorized discovery</h2>
+              <p className="text-sm text-muted">
+                {connected
+                  ? "Connected through the official integration"
+                  : configured
+                    ? "Ready to connect"
+                    : "API credentials are not configured"}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
+            Vurier uses only Upwork-authorized access. It does not scrape pages,
+            extract session cookies, or bypass provider restrictions.
+          </p>
+          {status === "permission_denied" ? (
+            <p className="mt-3 text-sm text-danger" role="alert">
+              The current connection does not include job discovery permission.
+              Reconnect with the required scope.
+            </p>
+          ) : null}
+        </div>
+        <div className="shrink-0">
+          {connected ? (
+            <form action={disconnectUpworkAction}>
+              <button className="button-secondary" type="submit">
+                <Unplug className="size-4" aria-hidden="true" />
+                Disconnect
+              </button>
+            </form>
+          ) : configured ? (
+            <a
+              className="button-primary"
+              href="/api/integrations/upwork/connect"
+            >
+              Connect Upwork
+            </a>
+          ) : (
+            <span className="inline-flex min-h-11 items-center rounded-xl bg-surface-muted px-4 text-sm font-medium text-muted">
+              Unavailable
+            </span>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }

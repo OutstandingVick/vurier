@@ -37,3 +37,7 @@ Authenticated users may manage only their schedule and preference rows. Run, del
 Phase 7 adds `demo_strategies`, `demo_references`, `demo_assets`, and `proposal_demo_assets`. Strategies retain deterministic ROI factors, unavailable inputs, model lineage, selected verified evidence, token usage, estimated cost, brief, and implementation prompt. References retain their source and verification response; assets retain progress and explicit user verification.
 
 RLS isolates every row by user and referenced ownership. A trigger rejects unverified or foreign portfolio evidence. Proposal links accept only completed, verified assets produced for the same job. Demo files live in the private `demos` bucket under a user-owned path.
+
+Phase 8 adds outcome and time fields, external expenses, bounded ranking adjustments, operational events, integration health, Connects and AI-cost reservations, and a durable provider limiter. Analytics indexes cover user/date/category/status access paths. Application and proposal triggers validate the full same-tenant relationship chain.
+
+Authenticated clients can read but cannot directly mutate authoritative application workflow, submission, ledger, audit, or notification tables. Trusted authenticated server actions perform those writes with the service role and explicit user scoping. `discovery_source_status` exposes connection metadata without encrypted token ciphertext.

@@ -49,7 +49,7 @@ export default async function ApplicationsPage({
           .order("created_at", { ascending: false })
           .limit(5),
         client
-          .from("discovery_sources")
+          .from("discovery_source_status")
           .select("scopes")
           .eq("user_id", user.id)
           .eq("provider", "upwork_api")
