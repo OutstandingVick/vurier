@@ -58,7 +58,12 @@ export function EvidenceCard({ item }: { item: PortfolioEvidence }) {
           <form
             action={deletePortfolioItem}
             onSubmit={(event) => {
-              if (!window.confirm(`Delete “${item.title}”? This cannot be undone.`)) event.preventDefault();
+              if (
+                !window.confirm(
+                  `Delete “${item.title}”? This cannot be undone.`,
+                )
+              )
+                event.preventDefault();
             }}
           >
             <input type="hidden" name="id" value={item.id} />

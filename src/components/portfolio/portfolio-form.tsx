@@ -11,18 +11,29 @@ export function PortfolioForm({ initial }: { initial?: PortfolioEvidence }) {
       className="rounded-2xl bg-surface p-5 shadow-card sm:p-6"
     >
       {initial ? <input type="hidden" name="id" value={initial.id} /> : null}
-      <h2 className="text-lg font-semibold">{initial ? "Edit portfolio evidence" : "Add portfolio evidence"}</h2>
+      <h2 className="text-lg font-semibold">
+        {initial ? "Edit portfolio evidence" : "Add portfolio evidence"}
+      </h2>
       <p className="mt-1 text-sm text-muted">
         Only mark facts as verified when you can substantiate them.
       </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <label className="space-y-2 text-sm font-medium">
           Title
-          <input className="field" name="title" defaultValue={initial?.title} required />
+          <input
+            className="field"
+            name="title"
+            defaultValue={initial?.title}
+            required
+          />
         </label>
         <label className="space-y-2 text-sm font-medium">
           Category
-          <select className="field" name="kind" defaultValue={initial?.kind ?? "project"}>
+          <select
+            className="field"
+            name="kind"
+            defaultValue={initial?.kind ?? "project"}
+          >
             <option value="project">Project</option>
             <option value="writing_sample">Writing sample</option>
             <option value="achievement">Achievement</option>
@@ -33,7 +44,11 @@ export function PortfolioForm({ initial }: { initial?: PortfolioEvidence }) {
         </label>
         <label className="space-y-2 text-sm font-medium sm:col-span-2">
           Description
-          <textarea className="field min-h-28 resize-y" name="description" defaultValue={initial?.description} />
+          <textarea
+            className="field min-h-28 resize-y"
+            name="description"
+            defaultValue={initial?.description}
+          />
         </label>
         <label className="space-y-2 text-sm font-medium">
           Skills{" "}
@@ -80,7 +95,11 @@ export function PortfolioForm({ initial }: { initial?: PortfolioEvidence }) {
         <label className="space-y-2 text-sm font-medium sm:col-span-2">
           Verified achievements{" "}
           <span className="font-normal text-muted">(one per line)</span>
-          <textarea className="field min-h-24 resize-y" name="achievements" defaultValue={initial?.achievements.join("\n")} />
+          <textarea
+            className="field min-h-24 resize-y"
+            name="achievements"
+            defaultValue={initial?.achievements.join("\n")}
+          />
         </label>
         <label className="flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-medium sm:col-span-2">
           <input

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { matchEvidence } from "@/core/proposals/evidence-matcher";
-const item = (verified: boolean, title = "React fintech dashboard", description = "Next.js TypeScript", skills = ["React"]) => ({
+const item = (
+  verified: boolean,
+  title = "React fintech dashboard",
+  description = "Next.js TypeScript",
+  skills = ["React"],
+) => ({
   id: crypto.randomUUID(),
   title,
   description,
