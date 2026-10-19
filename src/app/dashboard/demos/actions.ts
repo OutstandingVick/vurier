@@ -18,6 +18,7 @@ import { validateDemoFile } from "@/core/demos/file-validation";
 import type { PortfolioEvidence, PortfolioKind } from "@/core/proposals/types";
 import { hasDeepSeekEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { releaseAiCost, reserveAiCost } from "@/core/analytics/ai-reservation";
 
 export type DemoActionState = {
   error?: string;
@@ -147,46 +148,53 @@ export async function generateProofOfWork(
       monthlySpent: sum(demoCosts) + sum(analysisCosts) + sum(proposalCosts),
       monthlyLimit: Number(settings?.monthly_ai_budget_usd ?? 10),
     });
-    const result = await generateDemoStrategy({
-      job,
-      analysis,
-      evidence: ranked,
-      expectedKind: kind,
-      roiSignals: deriveRoiSignals({
-        budgetMax: job.budget_max,
-        hourlyMax: job.hourly_max,
-        proposalCount: job.proposal_count,
-        paymentVerification: job.client_payment_verification,
-        clientRating:
-          job.client_rating === null ? null : Number(job.client_rating),
-        publishedAt: job.published_at,
-        minimumBudget:
-          settings?.minimum_fixed_budget === null
-            ? null
-            : Number(settings?.minimum_fixed_budget),
-        minimumHourly:
-          settings?.minimum_hourly_rate === null
-            ? null
-            : Number(settings?.minimum_hourly_rate),
-      }),
-    });
-    const saved = await saveDemoStrategy(client, {
-      userId: user.id,
-      jobId: job.id,
-      fingerprint,
-      result: result.strategy,
-      roi: result.roi,
-      selectedEvidenceIds: result.selectedEvidence.map((item) => item.id),
-      usage: result.usage,
-      models: result.models,
-      estimatedCostUsd: result.estimatedCostUsd,
-    });
-    revalidatePath("/dashboard/demos");
-    revalidatePath(`/dashboard/opportunities/${job.id}`);
-    return {
-      message: "Proof-of-work strategy generated for review.",
-      strategyId: saved.id,
-    };
+    const reservationId = await reserveAiCost(client, user.id, "demo_strategy");
+    try {
+      const result = await generateDemoStrategy({
+        job,
+        analysis,
+        evidence: ranked,
+        expectedKind: kind,
+        roiSignals: deriveRoiSignals({
+          budgetMax: job.budget_max,
+          hourlyMax: job.hourly_max,
+          proposalCount: job.proposal_count,
+          paymentVerification: job.client_payment_verification,
+          clientRating:
+            job.client_rating === null ? null : Number(job.client_rating),
+          publishedAt: job.published_at,
+          minimumBudget:
+            settings?.minimum_fixed_budget === null
+              ? null
+              : Number(settings?.minimum_fixed_budget),
+          minimumHourly:
+            settings?.minimum_hourly_rate === null
+              ? null
+              : Number(settings?.minimum_hourly_rate),
+        }),
+      });
+      const saved = await saveDemoStrategy(client, {
+        userId: user.id,
+        jobId: job.id,
+        fingerprint,
+        result: result.strategy,
+        roi: result.roi,
+        selectedEvidenceIds: result.selectedEvidence.map((item) => item.id),
+        usage: result.usage,
+        models: result.models,
+        estimatedCostUsd: result.estimatedCostUsd,
+      });
+      revalidatePath("/dashboard/demos");
+      revalidatePath(`/dashboard/opportunities/${job.id}`);
+      return {
+        message: "Proof-of-work strategy generated for review.",
+        strategyId: saved.id,
+      };
+    } finally {
+      await releaseAiCost(client, user.id, reservationId).catch(
+        () => undefined,
+      );
+    }
   } catch (error) {
     return {
       error:
@@ -264,18 +272,16 @@ export async function addDemoReference(
   try {
     const { client, user } = await auth();
     const verified = await verifyReferenceUrl(parsed.data.url);
-    const { error } = await client
-      .from("demo_references")
-      .insert({
-        user_id: user.id,
-        strategy_id: parsed.data.strategyId,
-        title: parsed.data.title,
-        url: verified.url,
-        relevance: parsed.data.relevance,
-        source: "user",
-        http_status: verified.status,
-        verified_at: verified.verifiedAt,
-      });
+    const { error } = await client.from("demo_references").insert({
+      user_id: user.id,
+      strategy_id: parsed.data.strategyId,
+      title: parsed.data.title,
+      url: verified.url,
+      relevance: parsed.data.relevance,
+      source: "user",
+      http_status: verified.status,
+      verified_at: verified.verifiedAt,
+    });
     if (error) throw error;
     revalidatePath(`/dashboard/demos/${parsed.data.strategyId}`);
     return { message: "Reference verified and saved." };
@@ -332,19 +338,17 @@ export async function saveDemoAsset(
         error:
           "Only completed work with a verified URL or file can be approved.",
       };
-    const { error } = await client
-      .from("demo_assets")
-      .insert({
-        user_id: user.id,
-        strategy_id: parsed.data.strategyId,
-        title: parsed.data.title,
-        status: parsed.data.status,
-        url: parsed.data.url || null,
-        file_path: filePath,
-        notes: parsed.data.notes || null,
-        verified: parsed.data.verified,
-        approved_at: parsed.data.verified ? new Date().toISOString() : null,
-      });
+    const { error } = await client.from("demo_assets").insert({
+      user_id: user.id,
+      strategy_id: parsed.data.strategyId,
+      title: parsed.data.title,
+      status: parsed.data.status,
+      url: parsed.data.url || null,
+      file_path: filePath,
+      notes: parsed.data.notes || null,
+      verified: parsed.data.verified,
+      approved_at: parsed.data.verified ? new Date().toISOString() : null,
+    });
     if (error) throw error;
     revalidatePath(`/dashboard/demos/${parsed.data.strategyId}`);
     return {

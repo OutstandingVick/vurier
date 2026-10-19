@@ -17,6 +17,7 @@ import type {
 } from "@/core/proposals/types";
 import { hasDeepSeekEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { releaseAiCost, reserveAiCost } from "@/core/analytics/ai-reservation";
 export type ProposalActionState = { error?: string; message?: string };
 async function session() {
   const client = await createClient();
@@ -123,19 +124,31 @@ export async function createProposal(
         error:
           "No verified portfolio evidence matches this opportunity. Add relevant evidence first.",
       };
-    const result = await generateProposal({
-      job,
-      jobText: `${job.title}\n${job.description}`,
-      analysis,
-      evidence: matched,
-    });
-    const proposalId = await saveGeneratedProposal(
+    const reservationId = await reserveAiCost(
       client,
       user.id,
-      job.id,
-      result,
-      matched.map((item) => item.id),
+      "proposal_generation",
     );
+    let proposalId: string;
+    try {
+      const result = await generateProposal({
+        job,
+        jobText: `${job.title}\n${job.description}`,
+        analysis,
+        evidence: matched,
+      });
+      proposalId = await saveGeneratedProposal(
+        client,
+        user.id,
+        job.id,
+        result,
+        matched.map((item) => item.id),
+      );
+    } finally {
+      await releaseAiCost(client, user.id, reservationId).catch(
+        () => undefined,
+      );
+    }
     redirect(`/dashboard/proposals/${proposalId}`);
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error) throw error;
@@ -244,39 +257,50 @@ export async function rewriteDraft(
     const evidence = (await loadEvidence(client, user.id)).filter((item) =>
       proposal.proposal_strategies?.selected_evidence_ids?.includes(item.id),
     );
-    const result = await rewriteProposal({
-      job: proposal.jobs,
-      strategy: proposal.proposal_strategies.strategy,
-      evidence: evidence.map((item) => ({
-        ...item,
-        relevance: 100,
-        matchedTerms: item.skills,
-      })),
-      previousDraft: proposal.cover_letter,
-      tone: parsed.data.tone as ProposalTone,
-      length: parsed.data.length as ProposalLength,
-    });
-    const qa = validateProposal(
-      result.data,
-      evidence,
-      `${proposal.jobs.title} ${proposal.jobs.description}`,
-    );
-    await saveProposalVersion(
+    const reservationId = await reserveAiCost(
       client,
       user.id,
-      proposal.id,
-      result.data,
-      "rewrite",
-      parsed.data.tone,
-      parsed.data.length,
-      qa,
+      "proposal_generation",
     );
-    revalidatePath(`/dashboard/proposals/${proposal.id}`);
-    return {
-      message: qa.passed
-        ? "Rewrite saved."
-        : "Rewrite saved with quality warnings.",
-    };
+    try {
+      const result = await rewriteProposal({
+        job: proposal.jobs,
+        strategy: proposal.proposal_strategies.strategy,
+        evidence: evidence.map((item) => ({
+          ...item,
+          relevance: 100,
+          matchedTerms: item.skills,
+        })),
+        previousDraft: proposal.cover_letter,
+        tone: parsed.data.tone as ProposalTone,
+        length: parsed.data.length as ProposalLength,
+      });
+      const qa = validateProposal(
+        result.data,
+        evidence,
+        `${proposal.jobs.title} ${proposal.jobs.description}`,
+      );
+      await saveProposalVersion(
+        client,
+        user.id,
+        proposal.id,
+        result.data,
+        "rewrite",
+        parsed.data.tone,
+        parsed.data.length,
+        qa,
+      );
+      revalidatePath(`/dashboard/proposals/${proposal.id}`);
+      return {
+        message: qa.passed
+          ? "Rewrite saved."
+          : "Rewrite saved with quality warnings.",
+      };
+    } finally {
+      await releaseAiCost(client, user.id, reservationId).catch(
+        () => undefined,
+      );
+    }
   } catch (error) {
     return {
       error:
