@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildAuthorizationUrl, createPkcePair, exchangeAuthorizationCode } from "@/integrations/upwork/oauth";
+import {
+  buildAuthorizationUrl,
+  createPkcePair,
+  exchangeAuthorizationCode,
+} from "@/integrations/upwork/oauth";
 
 afterEach(() => vi.unstubAllEnvs());
 function configure() {
@@ -23,7 +27,18 @@ describe("Upwork OAuth", () => {
   });
   it("exchanges authorization codes server-side", async () => {
     configure();
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ access_token: "access", refresh_token: "refresh", expires_in: 3600 }), { status: 200 }));
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            access_token: "access",
+            refresh_token: "refresh",
+            expires_in: 3600,
+          }),
+          { status: 200 },
+        ),
+      );
     const tokens = await exchangeAuthorizationCode("code", "verifier", fetcher);
     expect(tokens.access_token).toBe("access");
     expect(fetcher).toHaveBeenCalledOnce();
