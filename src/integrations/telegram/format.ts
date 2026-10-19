@@ -2,9 +2,19 @@ import type { TelegramAlert } from "./types";
 
 const escape = (value: string) =>
   value.replace(
-    /[&<>]/g,
-    (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[character]!,
+    /[&<>"']/g,
+    (character) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        character
+      ]!,
   );
+
+const safeUrl = (value: string) => {
+  const url = new URL(value);
+  if (!["https:", "http:"].includes(url.protocol))
+    throw new Error("Notification links must use HTTP or HTTPS.");
+  return escape(url.toString());
+};
 
 export function formatTelegramAlert(alert: TelegramAlert) {
   const insights = alert.insights
@@ -12,9 +22,9 @@ export function formatTelegramAlert(alert: TelegramAlert) {
     .map((item) => `• ${escape(item)}`)
     .join("\n");
   const links = [
-    `<a href="${escape(alert.vurierUrl)}">Review in Vurier</a>`,
+    `<a href="${safeUrl(alert.vurierUrl)}">Review in Vurier</a>`,
     alert.upworkUrl
-      ? `<a href="${escape(alert.upworkUrl)}">View on Upwork</a>`
+      ? `<a href="${safeUrl(alert.upworkUrl)}">View on Upwork</a>`
       : null,
   ]
     .filter(Boolean)

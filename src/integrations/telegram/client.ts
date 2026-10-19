@@ -28,6 +28,7 @@ export class TelegramClient {
           disable_web_page_preview: true,
         }),
         cache: "no-store",
+        signal: AbortSignal.timeout(15_000),
       },
     );
     const body = (await response.json().catch(() => ({}))) as {

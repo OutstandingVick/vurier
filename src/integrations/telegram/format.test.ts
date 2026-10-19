@@ -16,4 +16,15 @@ describe("Telegram alert format", () => {
     expect(text).toContain("Review in Vurier");
     expect(text).toContain("View on Upwork");
   });
+  it("encodes quotes in link attributes", () => {
+    const text = formatTelegramAlert({
+      title: "Job",
+      budget: "$1",
+      score: 80,
+      insights: [],
+      vurierUrl: "https://vurier.test/x?q=%22onclick%3D%22x",
+      upworkUrl: null,
+    });
+    expect(text).not.toContain('"onclick="');
+  });
 });

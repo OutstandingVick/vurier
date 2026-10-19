@@ -11,13 +11,11 @@ const alert = {
 };
 describe("TelegramClient", () => {
   it("returns a confirmed message id", async () => {
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ ok: true, result: { message_id: 42 } }), {
-          status: 200,
-        }),
-      );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, result: { message_id: 42 } }), {
+        status: 200,
+      }),
+    );
     await expect(
       new TelegramClient(fetcher).sendAlert("secret", "chat", alert),
     ).resolves.toEqual({ messageId: "42" });
