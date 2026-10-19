@@ -8,7 +8,9 @@ export type ExternalJob = {
 };
 
 export interface UpworkGateway {
-  listAuthorizedJobs(cursor?: string): Promise<{ jobs: ExternalJob[]; nextCursor?: string }>;
+  listAuthorizedJobs(
+    cursor?: string,
+  ): Promise<{ jobs: ExternalJob[]; nextCursor?: string }>;
 }
 
 export class UpworkIntegrationNotConfiguredError extends Error {
