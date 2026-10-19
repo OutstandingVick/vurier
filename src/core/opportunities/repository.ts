@@ -62,6 +62,9 @@ export async function saveAnalysis(
     inputTokens: number;
     outputTokens: number;
     estimatedCostUsd: number;
+    baseScore: number;
+    optimizationAdjustment: number;
+    adjustmentExplanations: string[];
   },
 ) {
   const { data, error } = await client
@@ -88,6 +91,9 @@ export async function saveAnalysis(
         input_tokens: input.inputTokens,
         output_tokens: input.outputTokens,
         estimated_cost_usd: input.estimatedCostUsd,
+        base_score: input.baseScore,
+        optimization_adjustment: input.optimizationAdjustment,
+        adjustment_explanations: input.adjustmentExplanations,
         input_fingerprint: input.fingerprint,
         created_at: new Date().toISOString(),
       },

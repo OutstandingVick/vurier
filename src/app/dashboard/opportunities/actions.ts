@@ -20,25 +20,34 @@ async function context() {
     data: { user },
   } = await client.auth.getUser();
   if (!user) throw new Error("Your session expired. Sign in and try again.");
-  const [{ data: profile }, { data: settings }, { data: portfolio }] =
-    await Promise.all([
-      client
-        .from("profiles")
-        .select("bio,verified_skills")
-        .eq("id", user.id)
-        .single(),
-      client
-        .from("settings")
-        .select(
-          "preferred_categories,minimum_fixed_budget,minimum_hourly_rate,scoring_weights,daily_analysis_limit,monthly_ai_budget_usd",
-        )
-        .eq("user_id", user.id)
-        .single(),
-      client
-        .from("portfolio_items")
-        .select("title,description,skills")
-        .eq("user_id", user.id),
-    ]);
+  const [
+    { data: profile },
+    { data: settings },
+    { data: portfolio },
+    { data: adjustments },
+  ] = await Promise.all([
+    client
+      .from("profiles")
+      .select("bio,verified_skills")
+      .eq("id", user.id)
+      .single(),
+    client
+      .from("settings")
+      .select(
+        "preferred_categories,minimum_fixed_budget,minimum_hourly_rate,scoring_weights,daily_analysis_limit,monthly_ai_budget_usd,feedback_optimization_enabled",
+      )
+      .eq("user_id", user.id)
+      .single(),
+    client
+      .from("portfolio_items")
+      .select("title,description,skills")
+      .eq("user_id", user.id),
+    client
+      .from("ranking_adjustments")
+      .select("factor,adjustment,explanation")
+      .eq("user_id", user.id)
+      .eq("active", true),
+  ]);
   return {
     client,
     user,
@@ -49,6 +58,8 @@ async function context() {
       dailyAnalyses: settings?.daily_analysis_limit ?? 25,
       monthlyCostUsd: Number(settings?.monthly_ai_budget_usd ?? 10),
     },
+    optimizationEnabled: settings?.feedback_optimization_enabled ?? false,
+    adjustments: adjustments ?? [],
   };
 }
 
@@ -108,6 +119,14 @@ export async function analyzeJobs(
           profile: ctx.profile,
           weights: ctx.weights,
           limits: ctx.limits,
+          adjustments: ctx.optimizationEnabled
+            ? ctx.adjustments
+                .filter((item) => item.factor === `category:${row.category}`)
+                .map((item) => ({
+                  adjustment: Number(item.adjustment),
+                  explanation: item.explanation,
+                }))
+            : [],
         });
         completed++;
         tokens +=
