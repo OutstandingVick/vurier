@@ -24,14 +24,15 @@ import type {
 } from "@/core/applications/types";
 import { createClient } from "@/lib/supabase/server";
 import { getApprovalSigningKey } from "@/lib/env";
+import { createAdminClient } from "@/lib/supabase/admin";
 export type ApplicationActionState = { error?: string; message?: string };
 async function session() {
-  const client = await createClient();
+  const authClient = await createClient();
   const {
     data: { user },
-  } = await client.auth.getUser();
+  } = await authClient.auth.getUser();
   if (!user) throw new Error("Your session expired. Sign in and try again.");
-  return { client, user };
+  return { client: createAdminClient(), user };
 }
 export async function prepareApplication(
   _: ApplicationActionState,
@@ -216,21 +217,25 @@ export async function approveApplication(
       app.package as ApplicationPackage,
       getApprovalSigningKey(),
     );
-    await client.from("application_approvals").insert({
-      user_id: user.id,
-      application_id: app.id,
-      application_version: snap.applicationVersion,
-      fingerprint: snap.fingerprint,
-      signature: snap.signature,
-      bid_amount: snap.bidAmount,
-      connects_cost: snap.connectsCost,
-      boost_connects: snap.boostConnects,
-      expires_at: snap.expiresAt,
-    });
-    await client
+    const { error: approvalError } = await client
+      .from("application_approvals")
+      .insert({
+        user_id: user.id,
+        application_id: app.id,
+        application_version: snap.applicationVersion,
+        fingerprint: snap.fingerprint,
+        signature: snap.signature,
+        bid_amount: snap.bidAmount,
+        connects_cost: snap.connectsCost,
+        boost_connects: snap.boostConnects,
+        expires_at: snap.expiresAt,
+      });
+    if (approvalError) throw approvalError;
+    const { error: statusError } = await client
       .from("applications")
       .update({ status: "approved" })
       .eq("id", app.id);
+    if (statusError) throw statusError;
     await auditApplication(client, user.id, app.id, "explicit_approval", {
       version: app.application_version,
       bid: app.bid_amount,
@@ -277,7 +282,7 @@ export async function submitApplication(
           .limit(1)
           .maybeSingle(),
         client
-          .from("discovery_sources")
+          .from("discovery_source_status")
           .select("scopes")
           .eq("user_id", user.id)
           .eq("provider", "upwork_api")
@@ -321,6 +326,18 @@ export async function submitApplication(
       revalidatePath(`/dashboard/applications/${app.id}`);
       return { message: fallback };
     }
+    const token = await getValidUpworkToken(user.id);
+    if (!token) return { error: "Upwork connection is unavailable." };
+    const { data: reservationId, error: reservationError } = await client.rpc(
+      "reserve_application_connects",
+      { p_application_id: app.id },
+    );
+    if (reservationError || !reservationId)
+      return {
+        error:
+          reservationError?.message ??
+          "Unable to reserve Connects within your spending limits.",
+      };
     const key = submissionIdempotencyKey(
       user.id,
       app.id,
@@ -337,17 +354,26 @@ export async function submitApplication(
       })
       .select("id")
       .single();
-    if (attemptError)
+    if (attemptError) {
+      await client.rpc("release_connects_reservation", {
+        p_reservation_id: reservationId,
+      });
       return {
         error:
           "This exact application version already has a submission attempt. Reconcile its status before retrying.",
       };
-    await client
+    }
+    const submittingResult = await client
       .from("applications")
       .update({ status: "submitting" })
       .eq("id", app.id);
-    const token = await getValidUpworkToken(user.id);
-    if (!token) throw new Error("Upwork connection is unavailable.");
+    if (submittingResult.error) {
+      await client.rpc("release_connects_reservation", {
+        p_reservation_id: reservationId,
+      });
+      return { error: "Unable to begin submission safely." };
+    }
+    let providerAccepted = false;
     try {
       const result = await new UpworkApiClient().submitJobProposal(
         token.accessToken,
@@ -355,7 +381,8 @@ export async function submitApplication(
         user.id,
         key,
       );
-      await client
+      providerAccepted = true;
+      const attemptResult = await client
         .from("submission_attempts")
         .update({
           status: "succeeded",
@@ -363,7 +390,8 @@ export async function submitApplication(
           completed_at: new Date().toISOString(),
         })
         .eq("id", attempt.id);
-      await client
+      if (attemptResult.error) throw attemptResult.error;
+      const applicationResult = await client
         .from("applications")
         .update({
           status: "submitted",
@@ -372,22 +400,17 @@ export async function submitApplication(
           connects_spent: (app.connects_cost ?? 0) + app.boost_connects,
         })
         .eq("id", app.id);
-      await client.from("connects_ledger").insert([
-        {
-          user_id: user.id,
-          application_id: app.id,
-          kind: "application",
-          amount: app.connects_cost ?? 0,
-          source: "confirmed_submission",
-        },
-        {
-          user_id: user.id,
-          application_id: app.id,
-          kind: "boost",
-          amount: app.boost_connects,
-          source: "confirmed_submission",
-        },
-      ]);
+      if (applicationResult.error) throw applicationResult.error;
+      const { error: finalizeError } = await client.rpc(
+        "finalize_connects_reservation",
+        { p_reservation_id: reservationId },
+      );
+      if (finalizeError)
+        throw new UpworkApiError(
+          "Submission was confirmed, but local cost reconciliation is pending.",
+          undefined,
+          "uncertain_submission",
+        );
       await notify(client, user.id, {
         kind: "submitted",
         title: "Application submitted",
@@ -397,8 +420,13 @@ export async function submitApplication(
       return { message: "Upwork confirmed submission." };
     } catch (error) {
       const uncertain =
-        error instanceof UpworkApiError &&
-        error.code === "uncertain_submission";
+        providerAccepted ||
+        (error instanceof UpworkApiError &&
+          error.code === "uncertain_submission");
+      if (!uncertain)
+        await client.rpc("release_connects_reservation", {
+          p_reservation_id: reservationId,
+        });
       await client
         .from("submission_attempts")
         .update({
@@ -545,7 +573,7 @@ export async function syncApplicationStatus(
         .eq("user_id", user.id)
         .single(),
       client
-        .from("discovery_sources")
+        .from("discovery_source_status")
         .select("scopes")
         .eq("user_id", user.id)
         .eq("provider", "upwork_api")
@@ -602,6 +630,108 @@ export async function syncApplicationStatus(
         error instanceof Error
           ? error.message
           : "Unable to synchronize status.",
+    };
+  }
+}
+
+export async function reconcileUncertainSubmission(
+  _: ApplicationActionState,
+  formData: FormData,
+): Promise<ApplicationActionState> {
+  const parsed = z
+    .object({
+      applicationId: z.string().uuid(),
+      outcome: z.enum(["submitted", "not_submitted"]),
+      externalId: z.string().trim().max(200),
+      confirm: z.literal("yes"),
+    })
+    .safeParse(Object.fromEntries(formData));
+  if (!parsed.success)
+    return { error: "Confirm the verified Upwork outcome before reconciling." };
+  try {
+    const { client, user } = await session();
+    const { data: app } = await client
+      .from("applications")
+      .select("id,status,uncertain_submission")
+      .eq("id", parsed.data.applicationId)
+      .eq("user_id", user.id)
+      .single();
+    if (!app?.uncertain_submission)
+      return {
+        error: "This application has no uncertain submission to reconcile.",
+      };
+    if (parsed.data.outcome === "submitted" && !parsed.data.externalId)
+      return { error: "Enter the confirmed Upwork proposal ID." };
+    const { data: reservation } = await client
+      .from("connects_reservations")
+      .select("id")
+      .eq("application_id", app.id)
+      .eq("user_id", user.id)
+      .eq("status", "reserved")
+      .maybeSingle();
+    if (parsed.data.outcome === "submitted") {
+      const { error } = await client
+        .from("applications")
+        .update({
+          status: "submitted",
+          external_id: parsed.data.externalId,
+          submitted_at: new Date().toISOString(),
+          uncertain_submission: false,
+          last_error: null,
+        })
+        .eq("id", app.id)
+        .eq("user_id", user.id);
+      if (error) throw error;
+      if (reservation) {
+        const result = await client.rpc("finalize_connects_reservation", {
+          p_reservation_id: reservation.id,
+        });
+        if (result.error) throw result.error;
+      }
+    } else {
+      const { error } = await client
+        .from("applications")
+        .update({
+          status: "failed",
+          uncertain_submission: false,
+          last_error: "User verified that Upwork did not submit the proposal.",
+        })
+        .eq("id", app.id)
+        .eq("user_id", user.id);
+      if (error) throw error;
+      if (reservation)
+        await client.rpc("release_connects_reservation", {
+          p_reservation_id: reservation.id,
+        });
+    }
+    await client
+      .from("submission_attempts")
+      .update({
+        status: "reconciled",
+        external_id: parsed.data.externalId || null,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("application_id", app.id)
+      .eq("user_id", user.id)
+      .eq("status", "uncertain");
+    await auditApplication(client, user.id, app.id, "submission_reconciled", {
+      outcome: parsed.data.outcome,
+      externalId: parsed.data.externalId || null,
+    });
+    revalidatePath(`/dashboard/applications/${app.id}`);
+    revalidatePath("/dashboard/applications");
+    return {
+      message:
+        parsed.data.outcome === "submitted"
+          ? "Confirmed submission reconciled."
+          : "Unspent Connects reservation released.",
+    };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unable to reconcile this submission.",
     };
   }
 }
